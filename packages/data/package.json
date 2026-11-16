@@ -1,0 +1,19 @@
+{
+  "name": "@votatlas/data",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixture": "./src/tennessee.ts",
+    "./geometry": "./src/geometry.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@votatlas/contracts": "workspace:*"
+  }
+}

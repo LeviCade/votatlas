@@ -1,0 +1,1076 @@
+{
+  "election": {
+    "id": "tn-synthetic-v1",
+    "title": "Tennessee 95-county synthetic sandbox — NOT actual results",
+    "office": "Fictional statewide election",
+    "geographyVintage": "2020",
+    "dataStatus": "synthetic",
+    "candidates": [
+      {
+        "id": "aster",
+        "name": "Aster Rowan (fictional)",
+        "color": "#7544A6",
+        "ballotOrder": 0
+      },
+      {
+        "id": "briar",
+        "name": "Briar Solis (fictional)",
+        "color": "#008C90",
+        "ballotOrder": 1
+      },
+      {
+        "id": "cedar",
+        "name": "Cedar Vale (fictional)",
+        "color": "#B47F15",
+        "ballotOrder": 2
+      }
+    ]
+  },
+  "units": [
+    {
+      "geoId": "47001",
+      "stateId": "47",
+      "eligibleVoters": 31170,
+      "votes": {
+        "aster": 4383,
+        "briar": 4152,
+        "cedar": 4730
+      },
+      "otherBallots": 138
+    },
+    {
+      "geoId": "47003",
+      "stateId": "47",
+      "eligibleVoters": 66032,
+      "votes": {
+        "aster": 12850,
+        "briar": 7166,
+        "cedar": 9392
+      },
+      "otherBallots": 306
+    },
+    {
+      "geoId": "47005",
+      "stateId": "47",
+      "eligibleVoters": 100894,
+      "votes": {
+        "aster": 14117,
+        "briar": 19459,
+        "cedar": 13356
+      },
+      "otherBallots": 488
+    },
+    {
+      "geoId": "47007",
+      "stateId": "47",
+      "eligibleVoters": 28756,
+      "votes": {
+        "aster": 5599,
+        "briar": 4831,
+        "cedar": 3515
+      },
+      "otherBallots": 145
+    },
+    {
+      "geoId": "47009",
+      "stateId": "47",
+      "eligibleVoters": 63618,
+      "votes": {
+        "aster": 11333,
+        "briar": 11648,
+        "cedar": 9130
+      },
+      "otherBallots": 334
+    },
+    {
+      "geoId": "47011",
+      "stateId": "47",
+      "eligibleVoters": 98480,
+      "votes": {
+        "aster": 19131,
+        "briar": 11479,
+        "cedar": 21046
+      },
+      "otherBallots": 538
+    },
+    {
+      "geoId": "47013",
+      "stateId": "47",
+      "eligibleVoters": 26342,
+      "votes": {
+        "aster": 2756,
+        "briar": 4096,
+        "cedar": 4097
+      },
+      "otherBallots": 114
+    },
+    {
+      "geoId": "47015",
+      "stateId": "47",
+      "eligibleVoters": 61204,
+      "votes": {
+        "aster": 9132,
+        "briar": 8386,
+        "cedar": 9134
+      },
+      "otherBallots": 277
+    },
+    {
+      "geoId": "47017",
+      "stateId": "47",
+      "eligibleVoters": 96066,
+      "votes": {
+        "aster": 12601,
+        "briar": 14084,
+        "cedar": 17050
+      },
+      "otherBallots": 455
+    },
+    {
+      "geoId": "47019",
+      "stateId": "47",
+      "eligibleVoters": 23928,
+      "votes": {
+        "aster": 4472,
+        "briar": 2888,
+        "cedar": 4007
+      },
+      "otherBallots": 118
+    },
+    {
+      "geoId": "47021",
+      "stateId": "47",
+      "eligibleVoters": 58790,
+      "votes": {
+        "aster": 7619,
+        "briar": 12237,
+        "cedar": 9236
+      },
+      "otherBallots": 303
+    },
+    {
+      "geoId": "47023",
+      "stateId": "47",
+      "eligibleVoters": 93652,
+      "votes": {
+        "aster": 17425,
+        "briar": 17054,
+        "cedar": 13718
+      },
+      "otherBallots": 502
+    },
+    {
+      "geoId": "47025",
+      "stateId": "47",
+      "eligibleVoters": 21514,
+      "votes": {
+        "aster": 3504,
+        "briar": 4270,
+        "cedar": 3724
+      },
+      "otherBallots": 119
+    },
+    {
+      "geoId": "47027",
+      "stateId": "47",
+      "eligibleVoters": 56376,
+      "votes": {
+        "aster": 10125,
+        "briar": 7043,
+        "cedar": 6824
+      },
+      "otherBallots": 249
+    },
+    {
+      "geoId": "47029",
+      "stateId": "47",
+      "eligibleVoters": 91238,
+      "votes": {
+        "aster": 14995,
+        "briar": 12093,
+        "cedar": 13546
+      },
+      "otherBallots": 423
+    },
+    {
+      "geoId": "47031",
+      "stateId": "47",
+      "eligibleVoters": 19100,
+      "votes": {
+        "aster": 2738,
+        "briar": 2860,
+        "cedar": 3287
+      },
+      "otherBallots": 92
+    },
+    {
+      "geoId": "47033",
+      "stateId": "47",
+      "eligibleVoters": 53962,
+      "votes": {
+        "aster": 10293,
+        "briar": 6978,
+        "cedar": 8898
+      },
+      "otherBallots": 272
+    },
+    {
+      "geoId": "47035",
+      "stateId": "47",
+      "eligibleVoters": 88824,
+      "votes": {
+        "aster": 15781,
+        "briar": 11835,
+        "cedar": 17217
+      },
+      "otherBallots": 467
+    },
+    {
+      "geoId": "47037",
+      "stateId": "47",
+      "eligibleVoters": 16686,
+      "votes": {
+        "aster": 3935,
+        "briar": 1763,
+        "cedar": 3054
+      },
+      "otherBallots": 91
+    },
+    {
+      "geoId": "47039",
+      "stateId": "47",
+      "eligibleVoters": 51548,
+      "votes": {
+        "aster": 6927,
+        "briar": 7733,
+        "cedar": 6767
+      },
+      "otherBallots": 223
+    },
+    {
+      "geoId": "47041",
+      "stateId": "47",
+      "eligibleVoters": 86410,
+      "votes": {
+        "aster": 15655,
+        "briar": 11261,
+        "cedar": 10713
+      },
+      "otherBallots": 391
+    },
+    {
+      "geoId": "47043",
+      "stateId": "47",
+      "eligibleVoters": 14272,
+      "votes": {
+        "aster": 2436,
+        "briar": 1972,
+        "cedar": 2090
+      },
+      "otherBallots": 67
+    },
+    {
+      "geoId": "47045",
+      "stateId": "47",
+      "eligibleVoters": 49134,
+      "votes": {
+        "aster": 11268,
+        "briar": 5432,
+        "cedar": 6641
+      },
+      "otherBallots": 243
+    },
+    {
+      "geoId": "47047",
+      "stateId": "47",
+      "eligibleVoters": 83996,
+      "votes": {
+        "aster": 14201,
+        "briar": 16972,
+        "cedar": 10393
+      },
+      "otherBallots": 432
+    },
+    {
+      "geoId": "47049",
+      "stateId": "47",
+      "eligibleVoters": 11858,
+      "votes": {
+        "aster": 2193,
+        "briar": 1675,
+        "cedar": 2235
+      },
+      "otherBallots": 63
+    },
+    {
+      "geoId": "47051",
+      "stateId": "47",
+      "eligibleVoters": 46720,
+      "votes": {
+        "aster": 7802,
+        "briar": 6827,
+        "cedar": 10339
+      },
+      "otherBallots": 260
+    },
+    {
+      "geoId": "47053",
+      "stateId": "47",
+      "eligibleVoters": 81582,
+      "votes": {
+        "aster": 14203,
+        "briar": 7364,
+        "cedar": 13152
+      },
+      "otherBallots": 361
+    },
+    {
+      "geoId": "47055",
+      "stateId": "47",
+      "eligibleVoters": 9444,
+      "votes": {
+        "aster": 1206,
+        "briar": 1546,
+        "cedar": 1454
+      },
+      "otherBallots": 43
+    },
+    {
+      "geoId": "47057",
+      "stateId": "47",
+      "eligibleVoters": 44306,
+      "votes": {
+        "aster": 7801,
+        "briar": 6329,
+        "cedar": 6479
+      },
+      "otherBallots": 214
+    },
+    {
+      "geoId": "47059",
+      "stateId": "47",
+      "eligibleVoters": 79168,
+      "votes": {
+        "aster": 12686,
+        "briar": 12018,
+        "cedar": 13689
+      },
+      "otherBallots": 399
+    },
+    {
+      "geoId": "47061",
+      "stateId": "47",
+      "eligibleVoters": 7030,
+      "votes": {
+        "aster": 1550,
+        "briar": 864,
+        "cedar": 1135
+      },
+      "otherBallots": 36
+    },
+    {
+      "geoId": "47063",
+      "stateId": "47",
+      "eligibleVoters": 41892,
+      "votes": {
+        "aster": 6610,
+        "briar": 9111,
+        "cedar": 6253
+      },
+      "otherBallots": 228
+    },
+    {
+      "geoId": "47065",
+      "stateId": "47",
+      "eligibleVoters": 76754,
+      "votes": {
+        "aster": 12811,
+        "briar": 11053,
+        "cedar": 8040
+      },
+      "otherBallots": 332
+    },
+    {
+      "geoId": "47067",
+      "stateId": "47",
+      "eligibleVoters": 4616,
+      "votes": {
+        "aster": 709,
+        "briar": 729,
+        "cedar": 573
+      },
+      "otherBallots": 20
+    },
+    {
+      "geoId": "47069",
+      "stateId": "47",
+      "eligibleVoters": 39478,
+      "votes": {
+        "aster": 6656,
+        "briar": 3993,
+        "cedar": 7323
+      },
+      "otherBallots": 187
+    },
+    {
+      "geoId": "47071",
+      "stateId": "47",
+      "eligibleVoters": 74340,
+      "votes": {
+        "aster": 8892,
+        "briar": 13211,
+        "cedar": 13213
+      },
+      "otherBallots": 367
+    },
+    {
+      "geoId": "47073",
+      "stateId": "47",
+      "eligibleVoters": 109202,
+      "votes": {
+        "aster": 18516,
+        "briar": 17005,
+        "cedar": 18518
+      },
+      "otherBallots": 562
+    },
+    {
+      "geoId": "47075",
+      "stateId": "47",
+      "eligibleVoters": 37064,
+      "votes": {
+        "aster": 5496,
+        "briar": 6142,
+        "cedar": 7437
+      },
+      "otherBallots": 198
+    },
+    {
+      "geoId": "47077",
+      "stateId": "47",
+      "eligibleVoters": 71926,
+      "votes": {
+        "aster": 15123,
+        "briar": 9767,
+        "cedar": 13550
+      },
+      "otherBallots": 400
+    },
+    {
+      "geoId": "47079",
+      "stateId": "47",
+      "eligibleVoters": 106788,
+      "votes": {
+        "aster": 11902,
+        "briar": 19115,
+        "cedar": 14428
+      },
+      "otherBallots": 473
+    },
+    {
+      "geoId": "47081",
+      "stateId": "47",
+      "eligibleVoters": 34650,
+      "votes": {
+        "aster": 5579,
+        "briar": 5460,
+        "cedar": 4393
+      },
+      "otherBallots": 160
+    },
+    {
+      "geoId": "47083",
+      "stateId": "47",
+      "eligibleVoters": 69512,
+      "votes": {
+        "aster": 9854,
+        "briar": 12009,
+        "cedar": 10471
+      },
+      "otherBallots": 336
+    },
+    {
+      "geoId": "47085",
+      "stateId": "47",
+      "eligibleVoters": 104374,
+      "votes": {
+        "aster": 21360,
+        "briar": 14859,
+        "cedar": 14397
+      },
+      "otherBallots": 527
+    },
+    {
+      "geoId": "47087",
+      "stateId": "47",
+      "eligibleVoters": 32236,
+      "votes": {
+        "aster": 6004,
+        "briar": 4842,
+        "cedar": 5425
+      },
+      "otherBallots": 169
+    },
+    {
+      "geoId": "47089",
+      "stateId": "47",
+      "eligibleVoters": 67098,
+      "votes": {
+        "aster": 10847,
+        "briar": 11329,
+        "cedar": 13019
+      },
+      "otherBallots": 366
+    },
+    {
+      "geoId": "47091",
+      "stateId": "47",
+      "eligibleVoters": 101960,
+      "votes": {
+        "aster": 16670,
+        "briar": 11301,
+        "cedar": 14411
+      },
+      "otherBallots": 441
+    },
+    {
+      "geoId": "47093",
+      "stateId": "47",
+      "eligibleVoters": 29822,
+      "votes": {
+        "aster": 4571,
+        "briar": 3428,
+        "cedar": 4987
+      },
+      "otherBallots": 135
+    },
+    {
+      "geoId": "47095",
+      "stateId": "47",
+      "eligibleVoters": 64684,
+      "votes": {
+        "aster": 13240,
+        "briar": 5935,
+        "cedar": 10273
+      },
+      "otherBallots": 306
+    },
+    {
+      "geoId": "47097",
+      "stateId": "47",
+      "eligibleVoters": 99546,
+      "votes": {
+        "aster": 15289,
+        "briar": 17067,
+        "cedar": 14934
+      },
+      "otherBallots": 492
+    },
+    {
+      "geoId": "47099",
+      "stateId": "47",
+      "eligibleVoters": 27408,
+      "votes": {
+        "aster": 5643,
+        "briar": 4059,
+        "cedar": 3861
+      },
+      "otherBallots": 141
+    },
+    {
+      "geoId": "47101",
+      "stateId": "47",
+      "eligibleVoters": 62270,
+      "votes": {
+        "aster": 12017,
+        "briar": 9728,
+        "cedar": 10302
+      },
+      "otherBallots": 333
+    },
+    {
+      "geoId": "47103",
+      "stateId": "47",
+      "eligibleVoters": 97132,
+      "votes": {
+        "aster": 25060,
+        "briar": 12082,
+        "cedar": 14769
+      },
+      "otherBallots": 540
+    },
+    {
+      "geoId": "47105",
+      "stateId": "47",
+      "eligibleVoters": 24994,
+      "votes": {
+        "aster": 3634,
+        "briar": 4343,
+        "cedar": 2660
+      },
+      "otherBallots": 110
+    },
+    {
+      "geoId": "47107",
+      "stateId": "47",
+      "eligibleVoters": 59856,
+      "votes": {
+        "aster": 9582,
+        "briar": 7317,
+        "cedar": 9759
+      },
+      "otherBallots": 277
+    },
+    {
+      "geoId": "47109",
+      "stateId": "47",
+      "eligibleVoters": 94718,
+      "votes": {
+        "aster": 13768,
+        "briar": 12047,
+        "cedar": 18244
+      },
+      "otherBallots": 458
+    },
+    {
+      "geoId": "47111",
+      "stateId": "47",
+      "eligibleVoters": 22580,
+      "votes": {
+        "aster": 4479,
+        "briar": 2322,
+        "cedar": 4149
+      },
+      "otherBallots": 114
+    },
+    {
+      "geoId": "47113",
+      "stateId": "47",
+      "eligibleVoters": 57442,
+      "votes": {
+        "aster": 8314,
+        "briar": 10659,
+        "cedar": 10020
+      },
+      "otherBallots": 302
+    },
+    {
+      "geoId": "47115",
+      "stateId": "47",
+      "eligibleVoters": 92304,
+      "votes": {
+        "aster": 18329,
+        "briar": 14870,
+        "cedar": 15218
+      },
+      "otherBallots": 504
+    },
+    {
+      "geoId": "47117",
+      "stateId": "47",
+      "eligibleVoters": 20166,
+      "votes": {
+        "aster": 2769,
+        "briar": 2623,
+        "cedar": 2990
+      },
+      "otherBallots": 87
+    },
+    {
+      "geoId": "47119",
+      "stateId": "47",
+      "eligibleVoters": 55028,
+      "votes": {
+        "aster": 10471,
+        "briar": 5839,
+        "cedar": 7653
+      },
+      "otherBallots": 249
+    },
+    {
+      "geoId": "47121",
+      "stateId": "47",
+      "eligibleVoters": 89890,
+      "votes": {
+        "aster": 12310,
+        "briar": 16968,
+        "cedar": 11645
+      },
+      "otherBallots": 426
+    },
+    {
+      "geoId": "47123",
+      "stateId": "47",
+      "eligibleVoters": 17752,
+      "votes": {
+        "aster": 3386,
+        "briar": 2921,
+        "cedar": 2126
+      },
+      "otherBallots": 87
+    },
+    {
+      "geoId": "47125",
+      "stateId": "47",
+      "eligibleVoters": 52614,
+      "votes": {
+        "aster": 9189,
+        "briar": 9444,
+        "cedar": 7403
+      },
+      "otherBallots": 271
+    },
+    {
+      "geoId": "47127",
+      "stateId": "47",
+      "eligibleVoters": 87476,
+      "votes": {
+        "aster": 16673,
+        "briar": 10004,
+        "cedar": 18342
+      },
+      "otherBallots": 468
+    },
+    {
+      "geoId": "47129",
+      "stateId": "47",
+      "eligibleVoters": 15338,
+      "votes": {
+        "aster": 2063,
+        "briar": 3066,
+        "cedar": 3068
+      },
+      "otherBallots": 85
+    },
+    {
+      "geoId": "47131",
+      "stateId": "47",
+      "eligibleVoters": 50200,
+      "votes": {
+        "aster": 7320,
+        "briar": 6722,
+        "cedar": 7322
+      },
+      "otherBallots": 222
+    },
+    {
+      "geoId": "47133",
+      "stateId": "47",
+      "eligibleVoters": 85062,
+      "votes": {
+        "aster": 10915,
+        "briar": 12199,
+        "cedar": 14769
+      },
+      "otherBallots": 394
+    },
+    {
+      "geoId": "47135",
+      "stateId": "47",
+      "eligibleVoters": 12924,
+      "votes": {
+        "aster": 2365,
+        "briar": 1527,
+        "cedar": 2120
+      },
+      "otherBallots": 62
+    },
+    {
+      "geoId": "47137",
+      "stateId": "47",
+      "eligibleVoters": 47786,
+      "votes": {
+        "aster": 6069,
+        "briar": 9747,
+        "cedar": 7358
+      },
+      "otherBallots": 241
+    },
+    {
+      "geoId": "47139",
+      "stateId": "47",
+      "eligibleVoters": 82648,
+      "votes": {
+        "aster": 15081,
+        "briar": 14761,
+        "cedar": 11874
+      },
+      "otherBallots": 434
+    },
+    {
+      "geoId": "47141",
+      "stateId": "47",
+      "eligibleVoters": 10510,
+      "votes": {
+        "aster": 1680,
+        "briar": 2047,
+        "cedar": 1786
+      },
+      "otherBallots": 57
+    },
+    {
+      "geoId": "47143",
+      "stateId": "47",
+      "eligibleVoters": 45372,
+      "votes": {
+        "aster": 7959,
+        "briar": 5536,
+        "cedar": 5365
+      },
+      "otherBallots": 196
+    },
+    {
+      "geoId": "47145",
+      "stateId": "47",
+      "eligibleVoters": 80234,
+      "votes": {
+        "aster": 12894,
+        "briar": 10398,
+        "cedar": 11647
+      },
+      "otherBallots": 363
+    },
+    {
+      "geoId": "47147",
+      "stateId": "47",
+      "eligibleVoters": 8096,
+      "votes": {
+        "aster": 1136,
+        "briar": 1186,
+        "cedar": 1364
+      },
+      "otherBallots": 38
+    },
+    {
+      "geoId": "47149",
+      "stateId": "47",
+      "eligibleVoters": 42958,
+      "votes": {
+        "aster": 8026,
+        "briar": 5441,
+        "cedar": 6940
+      },
+      "otherBallots": 212
+    },
+    {
+      "geoId": "47151",
+      "stateId": "47",
+      "eligibleVoters": 77820,
+      "votes": {
+        "aster": 13555,
+        "briar": 10166,
+        "cedar": 14788
+      },
+      "otherBallots": 401
+    },
+    {
+      "geoId": "47153",
+      "stateId": "47",
+      "eligibleVoters": 5682,
+      "votes": {
+        "aster": 1314,
+        "briar": 589,
+        "cedar": 1021
+      },
+      "otherBallots": 30
+    },
+    {
+      "geoId": "47155",
+      "stateId": "47",
+      "eligibleVoters": 40544,
+      "votes": {
+        "aster": 7005,
+        "briar": 7820,
+        "cedar": 6843
+      },
+      "otherBallots": 225
+    },
+    {
+      "geoId": "47157",
+      "stateId": "47",
+      "eligibleVoters": 75406,
+      "votes": {
+        "aster": 13351,
+        "briar": 9603,
+        "cedar": 9136
+      },
+      "otherBallots": 334
+    },
+    {
+      "geoId": "47159",
+      "stateId": "47",
+      "eligibleVoters": 110268,
+      "votes": {
+        "aster": 18415,
+        "briar": 14908,
+        "cedar": 15786
+      },
+      "otherBallots": 511
+    },
+    {
+      "geoId": "47161",
+      "stateId": "47",
+      "eligibleVoters": 38130,
+      "votes": {
+        "aster": 8562,
+        "briar": 4128,
+        "cedar": 5047
+      },
+      "otherBallots": 184
+    },
+    {
+      "geoId": "47163",
+      "stateId": "47",
+      "eligibleVoters": 72992,
+      "votes": {
+        "aster": 12094,
+        "briar": 14454,
+        "cedar": 8850
+      },
+      "otherBallots": 368
+    },
+    {
+      "geoId": "47165",
+      "stateId": "47",
+      "eligibleVoters": 107854,
+      "votes": {
+        "aster": 19569,
+        "briar": 14943,
+        "cedar": 19926
+      },
+      "otherBallots": 567
+    },
+    {
+      "geoId": "47167",
+      "stateId": "47",
+      "eligibleVoters": 35716,
+      "votes": {
+        "aster": 5854,
+        "briar": 5122,
+        "cedar": 7758
+      },
+      "otherBallots": 195
+    },
+    {
+      "geoId": "47169",
+      "stateId": "47",
+      "eligibleVoters": 70578,
+      "votes": {
+        "aster": 12001,
+        "briar": 6223,
+        "cedar": 11113
+      },
+      "otherBallots": 305
+    },
+    {
+      "geoId": "47171",
+      "stateId": "47",
+      "eligibleVoters": 105440,
+      "votes": {
+        "aster": 13166,
+        "briar": 16880,
+        "cedar": 15869
+      },
+      "otherBallots": 478
+    },
+    {
+      "geoId": "47173",
+      "stateId": "47",
+      "eligibleVoters": 33302,
+      "votes": {
+        "aster": 5739,
+        "briar": 4656,
+        "cedar": 4766
+      },
+      "otherBallots": 157
+    },
+    {
+      "geoId": "47175",
+      "stateId": "47",
+      "eligibleVoters": 68164,
+      "votes": {
+        "aster": 10699,
+        "briar": 10136,
+        "cedar": 11546
+      },
+      "otherBallots": 337
+    },
+    {
+      "geoId": "47177",
+      "stateId": "47",
+      "eligibleVoters": 103026,
+      "votes": {
+        "aster": 22277,
+        "briar": 12424,
+        "cedar": 16281
+      },
+      "otherBallots": 531
+    },
+    {
+      "geoId": "47179",
+      "stateId": "47",
+      "eligibleVoters": 30888,
+      "votes": {
+        "aster": 4781,
+        "briar": 6591,
+        "cedar": 4524
+      },
+      "otherBallots": 165
+    },
+    {
+      "geoId": "47181",
+      "stateId": "47",
+      "eligibleVoters": 65750,
+      "votes": {
+        "aster": 14110,
+        "briar": 12174,
+        "cedar": 8855
+      },
+      "otherBallots": 366
+    },
+    {
+      "geoId": "47183",
+      "stateId": "47",
+      "eligibleVoters": 100612,
+      "votes": {
+        "aster": 15111,
+        "briar": 15531,
+        "cedar": 12175
+      },
+      "otherBallots": 446
+    },
+    {
+      "geoId": "47185",
+      "stateId": "47",
+      "eligibleVoters": 28474,
+      "votes": {
+        "aster": 4696,
+        "briar": 2818,
+        "cedar": 5167
+      },
+      "otherBallots": 132
+    },
+    {
+      "geoId": "47187",
+      "stateId": "47",
+      "eligibleVoters": 63336,
+      "votes": {
+        "aster": 7418,
+        "briar": 11021,
+        "cedar": 11022
+      },
+      "otherBallots": 306
+    },
+    {
+      "geoId": "47189",
+      "stateId": "47",
+      "eligibleVoters": 98198,
+      "votes": {
+        "aster": 16317,
+        "briar": 14985,
+        "cedar": 16319
+      },
+      "otherBallots": 496
+    }
+  ]
+}
