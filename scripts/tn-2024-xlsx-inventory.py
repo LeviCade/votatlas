@@ -14,7 +14,7 @@ R = '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}'
 
 def inventory(path):
     b = Path(path).read_bytes()
-    if not b.startswith(b'PK\\x03\\x04'):
+    if not b.startswith(b'PK\x03\x04'):
         raise ValueError('not XLSX/ZIP original bytes')
     with zipfile.ZipFile(path) as f:
         names = f.namelist()

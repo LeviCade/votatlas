@@ -22,6 +22,7 @@ jobs:
           node --test scripts/tn-2024-precinct-validation.test.mjs
           node --test scripts/tn-2024-office-validation.test.mjs
           node --test scripts/tn-2024-release-gate.test.mjs
+          python3 scripts/tn_2024_xlsx_inventory_test.py
           node scripts/generate-tennessee-2024.mjs --check
       - name: Install PDF extractor
         run: |
