@@ -32,7 +32,7 @@ jobs:
         run: pnpm --filter @votatlas/web build
       - name: Install headless Chromium
         if: steps.web.outputs.present == 'true'
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm --filter @votatlas/web exec playwright install --with-deps chromium
       - name: Run desktop and mobile smoke
         if: steps.web.outputs.present == 'true'
         env:
