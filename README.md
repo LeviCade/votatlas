@@ -10,8 +10,8 @@ Votatlas is a map-first, **candidate-neutral election simulation laboratory**. E
 - A panoramic interactive county map, live scoreboard, contextual controls, and shareable scenarios.
 - Exact baseline reproduction, deterministic calculations, explicit data provenance, and clearly disclosed model uncertainty.
 
-## Project status — November 15, 2026
-**Round Four integrated — Tennessee multi-scope election sandbox.** Real 95-county Census boundaries, candidate-neutral custom candidates, scoped county/multi-county/statewide adjustments, Undo/Reset, and canonical v2 portable scenario projects are verified by desktop/mobile browser CI. An experimental **synthetic-only** disjoint demographic cohort engine is also available in sim-core; demographic UI and model-file persistence are planned for Round Five. The county presidential totals currently displayed remain **FICTIONAL**, not official historical returns. Owner-supplied 2024 source PDFs reconcile for 95 counties and 1,862 precincts, but the historical fixture is **BLOCKED** pending independent upstream authentication, reuse/scope approval and missing ballot-category review (Issue #20). Main is not released; license/data rights gate #5 OPEN. See [source retrieval requests](docs/SOURCE_RETRIEVAL_REQUESTS.md).
+## Project status — November 16, 2026
+**Round Five integrated — functional synthetic demographic Model Lab.** The 95-county Tennessee map supports custom candidates, single/multi/state adjustment scope, hypothetical fictional age-like subgroup support/turnout, model Undo/Reset, and canonical v3 source-bound projects. Native and desktop/mobile browser CI are green. **All election ballots and subgroup voting preferences remain fictional**, not actual 2024 results. Round Six adds real ACS 2024 5-year county population-composition estimates (age/education) as source-labeled geography inputs, while electoral behavior remains an explicit hypothetical assumption. Historic source gate #20 and code/data-rights gate #5 remain OPEN; main unreleased. See [source retrieval requests](docs/SOURCE_RETRIEVAL_REQUESTS.md).
 
 ## Engineering entry points
 - [Product vision](docs/PRODUCT_VISION.md)
