@@ -90,7 +90,13 @@ export function removeRegistryCandidate(
   if (current.result.units.some(unit => (unit.votes[candidateId] ?? 0) !== 0)) {
     throw new SimulationError("CANDIDATE_HAS_VOTES", "This candidate currently has simulated votes. Undo or reset their adjustments first.");
   }
-  const reduced = removeZeroVoteCandidate(current.election, current.baseUnits, candidateId);
+  // E2 Round Three adds a mandatory history argument. The temporary cast keeps
+  // this branch compiling against the R3 base while invoking the enhanced guard
+  // once E2 is merged; our checks above apply on both versions.
+  const guardedRemove = removeZeroVoteCandidate as (
+    election: ElectionDefinition, units: readonly BaseUnitResult[], id: string, history: Scenario
+  ) => { election: ElectionDefinition; baseUnits: BaseUnitResult[] };
+  const reduced = guardedRemove(current.election, current.baseUnits, candidateId, current.scenario);
   const next = createSession(reduced.election, reduced.baseUnits, current.scenario);
   for (const before of current.result.units) {
     const after = next.result.units.find(row => row.geoId === before.geoId);
@@ -113,4 +119,9 @@ export function importLegacyRegistryScenario(
 /** Useful for recognizing derived entrants without treating ballot order as a party index. */
 export function isHypotheticalCandidate(candidate: Candidate, trustedSource: ElectionDefinition): boolean {
   return !trustedSource.candidates.some(original => original.id === candidate.id);
+}
+
+/** Construct an atomically validated restored project from a trusted baseline. */
+export function hydrateRegistrySandbox(election: ElectionDefinition, units: readonly BaseUnitResult[], scenario: Scenario): RegistrySandboxSession {
+  return createSession(election, units, scenario);
 }
