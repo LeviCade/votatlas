@@ -72,7 +72,7 @@ test("candidate editor: add, rename, reject unsafe removal, portable project rou
   await page.getByRole("button", { name: "Rename Future Choice" }).click();
   await page.getByLabel("Rename Future Choice").fill("Future Choice Renamed");
   await page.getByRole("button", { name: "Save name" }).click();
-  await expect(page.getByText("Future Choice Renamed", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Candidate registry editor" }).getByText("Future Choice Renamed", { exact: true })).toBeVisible();
 
   await page.getByLabel("Target candidate").selectOption("new-future");
   await page.getByLabel("Target candidate-ballot share (%)").fill("15");
@@ -97,7 +97,7 @@ test("candidate editor: add, rename, reject unsafe removal, portable project rou
   await page.getByRole("button", { name: "Import JSON" }).click();
   await page.getByRole("button", { name: "Candidates", exact: true }).click();
   await expect(page.getByTestId("registry-count")).toHaveText("4 candidates");
-  await expect(page.getByText("Future Choice Renamed", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Candidate registry editor" }).getByText("Future Choice Renamed", { exact: true })).toBeVisible();
   await expect(page.getByTestId("state-votes-new-future")).toBeVisible();
   await page.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(page.getByTestId("registry-count")).toHaveText("3 candidates");
