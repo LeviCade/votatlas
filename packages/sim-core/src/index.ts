@@ -1,3 +1,8 @@
+export {
+  createScenarioProject, serializeScenarioProject, parseScenarioProject,
+  restoreScenarioProject, fingerprintSourceElection, MAX_SCENARIO_PROJECT_BYTES
+} from "./scenario-project.js";
+export type { ScenarioProjectV2, ParsedScenarioProject, RestoredScenarioProject } from "./scenario-project.js";
 export { addCandidate, renameCandidate, removeZeroVoteCandidate } from "./candidate-registry.js";
 export type { CandidateAddition, CandidateRegistryExtension } from "./candidate-registry.js";
 export { SimulationError, simulateElection, undoLastAction, appendAction, serializeScenario, parseScenario } from "./engine.js";
