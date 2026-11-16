@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Candidate, GeoScope, SimulationResult } from "@votatlas/contracts";
+import type { Candidate, GeoScope } from "@votatlas/contracts";
 import type { CohortAction } from "@votatlas/sim-core";
 import type { SyntheticModelSession } from "./model-lab";
 
@@ -33,7 +33,6 @@ export interface ModelLabProps {
   selectedIds: readonly string[];
   scope: GeoScope | null;
   scopeLabel: string;
-  ordinary: SimulationResult;
   model: SyntheticModelSession | null;
   generatorReady: boolean;
   canonicalSaveReady: boolean;
@@ -44,7 +43,7 @@ export interface ModelLabProps {
   onExit: () => void;
 }
 export function ModelLab({
-  candidates, selectedIds, scope, scopeLabel, ordinary, model, generatorReady,
+  candidates, selectedIds, scope, scopeLabel, model, generatorReady,
   canonicalSaveReady, onStart, onApply, onUndo, onResetEdits, onExit,
 }: ModelLabProps) {
   const [acknowledged, setAcknowledged] = useState(false);

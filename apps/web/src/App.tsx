@@ -156,7 +156,7 @@ export default function App() {
   }
 
   return <Dashboard election={session.election} trustedSource={fixture.election}
-    result={model?.output.result ?? session.result} ordinaryResult={session.result} baseline={session.baseline}
+    result={model?.output.result ?? session.result} baseline={session.baseline}
     model={model} modelGeneratorReady={modelGeneratorReady} canonicalV3Ready={canonicalV3Ready}
     onBeginModel={beginModel} onModelAction={modelAction} onUndoModel={undoModel}
     onResetModel={resetModel} onExitModel={exitModel}

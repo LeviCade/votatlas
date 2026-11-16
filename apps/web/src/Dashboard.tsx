@@ -22,7 +22,6 @@ const actionId = () => "ui-" + (typeof crypto !== "undefined" && "randomUUID" in
 export interface DashboardProps {
   election: ElectionDefinition;
   result: SimulationResult;
-  ordinaryResult?: SimulationResult;
   baseline: SimulationResult;
   model?: SyntheticModelSession | null;
   modelGeneratorReady?: boolean;
@@ -121,7 +120,7 @@ function ScopedResults({ title, current, initial, candidates }: {
     </section>
   );
 }
-export function Dashboard({ election, trustedSource, result, ordinaryResult, baseline, references, scenario, geometry,
+export function Dashboard({ election, trustedSource, result, baseline, references, scenario, geometry,
   model = null, modelGeneratorReady = false, canonicalV3Ready = false,
   onBeginModel = () => false, onModelAction = () => false,
   onUndoModel = () => {}, onResetModel = () => {}, onExitModel = () => {},
@@ -437,7 +436,7 @@ export function Dashboard({ election, trustedSource, result, ordinaryResult, bas
             </div>}
             {activeTab === "Model Lab" && <div className="control-section">
               <ModelLab candidates={candidates} selectedIds={selectedIds} scope={scope()}
-                scopeLabel={activeAreaLabel} ordinary={ordinaryResult ?? result} model={model}
+                scopeLabel={activeAreaLabel} model={model}
                 generatorReady={modelGeneratorReady} canonicalSaveReady={canonicalV3Ready}
                 onStart={onBeginModel} onApply={onModelAction} onUndo={onUndoModel}
                 onResetEdits={onResetModel} onExit={onExitModel}/>
