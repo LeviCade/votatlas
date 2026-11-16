@@ -30,9 +30,9 @@ test('unknown GEOID and forged county name fail', () => {
   assert.throws(() => validateTennesseeGeometry(name, references), /unrecognized/);
 });
 test('invalid lon/lat, NaN and nonpolygon shapes fail', () => {
-  const bad = copy(); bad.features[0].geometry.coordinates[0][0][0] = -91;
+  const bad = copy(); bad.features[0].geometry.coordinates[0][1][0] = -91;
   assert.throws(() => validateTennesseeGeometry(bad, references), /outside Tennessee/);
-  const nan = copy(); nan.features[0].geometry.coordinates[0][0][1] = Number.NaN;
+  const nan = copy(); nan.features[0].geometry.coordinates[0][1][1] = Number.NaN;
   assert.throws(() => validateTennesseeGeometry(nan, references), /non-finite/);
   const shape = copy(); shape.features[0].geometry.type = 'Point';
   assert.throws(() => validateTennesseeGeometry(shape, references), /Polygon/);
