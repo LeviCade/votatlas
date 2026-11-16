@@ -60,7 +60,7 @@ function UnitDetails({ unit, baselineUnit, countyName, candidates }: {
   const winnerId = uniqueLeader(unit.votes, candidates.map((c) => c.id));
   return (
     <section className="unit-details" aria-live="polite" aria-label="County details">
-      <div className="unit-header"><div><span className="eyebrow">Selected county · FIPS {unit.geoId}</span><h3>{countyName}</h3></div><span className="detail-tag">{winnerId ? "Unique leader" : "Tie / no votes"}</span></div>
+      <div className="unit-header"><div><span className="eyebrow">Selected county · FIPS {unit.geoId}</span><h3>{countyName}</h3></div><span className="detail-tag" data-testid="selected-county-leader">{winnerId ? `Leading: ${candidates.find(candidate => candidate.id === winnerId)?.name ?? winnerId}` : "Tie / no votes"}</span></div>
       <div className="unit-columns"><span>Candidate ballots <b>{formatNumber(candidateBallots)}</b></span><span>Other ballots <b>{formatNumber(unit.otherBallots)}</b></span></div>
       {candidates.map((candidate) => (
         <div key={candidate.id} className="unit-row">

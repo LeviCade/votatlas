@@ -32,6 +32,7 @@ test("REAL Census MapLibre geometry: Aster to Cedar winner flip recolors source 
   await expect.poll(async () => (await inspect(page))?.rendered).toBe(true);
   const before = (await inspect(page))!;
   expect(before.winnerCandidateId).toBe("aster");
+  await expect(page.getByTestId("selected-county-leader")).toContainText("Aster Rowan");
   expect(before.sourceFeatureCount).toBeGreaterThan(0);
   expect(before.layerColorExpression).toEqual(["get", "fill"]);
   await page.screenshot({ path: info.outputPath("davidson-aster-real-map.png"), fullPage: true });
@@ -46,6 +47,7 @@ test("REAL Census MapLibre geometry: Aster to Cedar winner flip recolors source 
   await expect.poll(async () => (await inspect(page))?.fill, { timeout: 25000 }).toBe("#B47F15");
   const after = (await inspect(page))!;
   expect(after.winnerCandidateId).toBe("cedar");
+  await expect(page.getByTestId("selected-county-leader")).toContainText("Cedar Vale");
   expect(after.rendered).toBe(true);
   expect(after.layerColorExpression).toEqual(["get", "fill"]);
   expect(Math.abs(after.zoom - before.zoom)).toBeLessThan(0.05);
