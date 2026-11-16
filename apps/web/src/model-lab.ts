@@ -11,6 +11,21 @@ export interface SyntheticModelSession {
   output: CohortSimulationResult;
   seed: string;
 }
+/** Compare numeric county invariants, not JavaScript object key insertion order. */
+function sameCountyVotes(a: readonly BaseUnitResult[], b: readonly BaseUnitResult[]): boolean {
+  if (a.length !== b.length) return false;
+  const expected = new Map(b.map(row => [row.geoId, row]));
+  for (const row of a) {
+    const other = expected.get(row.geoId);
+    if (!other || row.stateId !== other.stateId ||
+        row.otherBallots !== other.otherBallots ||
+        row.eligibleVoters !== other.eligibleVoters) return false;
+    const keys = Object.keys(row.votes);
+    if (keys.length !== Object.keys(other.votes).length ||
+        keys.some(id => row.votes[id] !== other.votes[id])) return false;
+  }
+  return true;
+}
 interface CanonicalModelApi {
   createSyntheticDemoPartition?: (election: ElectionDefinition, ordinaryResultUnits: readonly BaseUnitResult[], seed?: string) => SyntheticCohortPartition;
   createScenarioProjectV3?: (sourceElection: ElectionDefinition, sourceUnits: readonly BaseUnitResult[],
@@ -29,7 +44,7 @@ function build(ordinary: RegistrySandboxSession, partition: SyntheticCohortParti
   const output = sim.simulateCohortPartition(ordinary.election, ordinary.result.units, partition, actions);
   if (actions.length === 0) {
     // Every county candidate count AND other ballots must be exactly reconstructed.
-    if (JSON.stringify(output.result.units) !== JSON.stringify(ordinary.result.units)) {
+    if (!sameCountyVotes(output.result.units, ordinary.result.units)) {
       throw new Error("Synthetic partition must exactly reconstruct the current standard election before applying model actions.");
     }
   }
@@ -69,6 +84,8 @@ interface RestoredWithModel {
   cohortPartition: SyntheticCohortPartition;
   cohortActions: CohortAction[];
   cohortResult: CohortSimulationResult;
+  intermediate?: { units: BaseUnitResult[] };
+  model?: { seed?: string };
 }
 function hasModel(value: object): value is RestoredWithModel {
   return "cohortResult" in value && "cohortPartition" in value && "cohortActions" in value;
@@ -80,9 +97,11 @@ export function importCanonicalProject(
   const ordinary = hydrateRegistrySandbox(restored.election, restored.baseUnits, restored.scenario);
   if (!hasModel(restored)) return { ordinary, model: null };
   if (!canonicalV3Ready) return unsupported();
+  if (restored.intermediate && !sameCountyVotes(restored.intermediate.units, ordinary.result.units))
+    throw new Error("Canonical imported pre-model election does not match the trusted replay.");
   const model = build(ordinary, restored.cohortPartition, restored.cohortActions,
-    restored.cohortPartition.partitionId);
-  if (JSON.stringify(model.output.result.units) !== JSON.stringify(restored.cohortResult.result.units))
+    restored.model?.seed ?? restored.cohortPartition.partitionId);
+  if (!sameCountyVotes(model.output.result.units, restored.cohortResult.result.units))
     throw new Error("Canonical project cohort output failed deterministic validation.");
   return { ordinary, model };
 }

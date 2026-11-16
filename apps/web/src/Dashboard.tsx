@@ -368,7 +368,7 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
                   setActionMessage("Could not read this scenario file.");
                 } finally { field.value = ""; }
               }} />
-            <label className="scenario-editor-label" htmlFor="scenario-json">Scenario project JSON · v2 or legacy v1</label>
+            <label className="scenario-editor-label" htmlFor="scenario-json">{model ? "Canonical model project JSON · v3" : "Scenario project JSON · v2 or legacy v1"}</label>
             <textarea id="scenario-json" className="scenario-json" rows={3} value={scenarioJson} disabled={modelPersistenceBlocked}
               onChange={(event) => setScenarioJson(event.target.value)}
               placeholder="Export your project or paste a portable scenario JSON here…" />
