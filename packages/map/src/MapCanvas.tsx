@@ -42,7 +42,7 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
       try {
         const maplibre = await import("maplibre-gl");
         if (disposed || !containerRef.current) return;
-        if (!maplibre.supported()) throw new Error("This browser does not provide WebGL map rendering.");
+        // MapLibre versions differ in support probes; constructor/error handlers provide fallback.
         const map = new maplibre.Map({
           container: containerRef.current,
           style: blankStyle,
