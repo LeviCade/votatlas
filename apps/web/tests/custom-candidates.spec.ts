@@ -76,7 +76,7 @@ test("candidate editor: add, rename, reject unsafe removal, portable project rou
   await page.getByRole("button", { name: "Save name" }).click();
   await expect(page.getByRole("region", { name: "Candidate registry editor" }).getByText("Future Choice Renamed", { exact: true })).toBeVisible();
 
-  await page.getByLabel("Target candidate").selectOption("new-future");
+  await page.getByLabel("Target candidate", { exact: true }).selectOption("new-future");
   await page.getByLabel("Target candidate-ballot share (%)").fill("15");
   await page.getByRole("button", { name: "Apply SET_SHARE" }).click();
   await expect(page.getByRole("button", { name: "Remove Future Choice Renamed" })).toBeVisible();
