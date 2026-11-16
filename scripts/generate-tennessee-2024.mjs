@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseCountyReport, transformCountyReport, serialize, sha256, verifySourceChecksum } from './tn-2024-sos-lib.mjs';
 import { verifySevenTicketHeader, parsePrecinctReport, reconcileCountyAndPrecinct } from './tn-2024-sos-precinct-lib.mjs';
+import { assertHistoricalReleaseApproved, historicalReleaseBlockers } from './tn-2024-release-gate.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const base=resolve(root,'packages/data/fixtures/');
 const refs=JSON.parse(readFileSync(resolve(base,'tennessee-counties-2020.json'),'utf8'));
@@ -20,9 +21,10 @@ if(check && !source && !textPath) {
   const raw=readFileSync(fixturePath);
   const staged=JSON.parse(raw);
   if(!manifest.releaseApproved) {
-    if(staged.election?.dataStatus==='official' || manifest.dataStatus==='official' || staged.availability!=='blocked') throw new Error('Unapproved observations marked as official');
+    if(staged.election?.dataStatus==='official' || manifest.dataStatus!=='blocked' || staged.availability!=='blocked' || staged.units!==undefined || staged.election!==undefined) throw new Error('Unapproved observations marked as official');
     console.log('PASS: historical 2024 fixture remains source/rights BLOCKED');
   } else {
+    assertHistoricalReleaseApproved(manifest);
     if(sha256(raw)!==manifest.payloadSha256 || staged.election?.dataStatus!=='official' || staged.units?.length!==95) throw new Error('Approved historical fixture invalid');
     console.log('PASS: approved historical fixture sha256 '+sha256(raw));
   }
@@ -68,8 +70,11 @@ if(audit) {
   if(process.env.VOTATLAS_TN2024_RIGHTS_APPROVED!=='yes' || !originalDigest || !precinctPath ||
      manifest.sourceAuthentication?.officialByteIdentical!==true ||
      manifest.rights?.approvalStatus!=='approved') throw new Error('NO-GO: independently byte-authenticated SOS source, precinct reconciliation and documented conductor rights approval mandatory');
-  const approved={...proposed,dataStatus:'official',releaseApproved:true,reason:'7 named ticket columns only; unrecorded write-ins / undervotes excluded'};
-  approved.rights={...manifest.rights,approvalStatus:'approved'};
+  // Approval is scoped to the pre-recorded manifest, not self-granted by this CLI.
+  // A proposed post-write release must pass the same status literal as the runtime getter.
+  const approved={...proposed,dataStatus:'official',releaseApproved:true,
+    reason:'7 named ticket columns ONLY; no turnout or observed write-in values'};
+  assertHistoricalReleaseApproved(approved);
   writeFileSync(fixturePath,rendered);
   writeFileSync(manifestPath,serialize(approved));
   console.log('WROTE approved 95-county official seven-ticket fixture');

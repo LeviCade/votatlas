@@ -1,7 +1,7 @@
 name: Tennessee 2024 SOS source audit (no public release)
 on:
   push:
-    branches: [feature/v0.1-r4-e3-official-source]
+    branches: [feature/v0.1-r5-e3-2024-authentication]
   pull_request:
     branches: [integration]
   workflow_dispatch:
@@ -20,6 +20,8 @@ jobs:
         run: |
           node --test scripts/tn-2024-sos-validation.test.mjs
           node --test scripts/tn-2024-precinct-validation.test.mjs
+          node --test scripts/tn-2024-office-validation.test.mjs
+          node --test scripts/tn-2024-release-gate.test.mjs
           node scripts/generate-tennessee-2024.mjs --check
       - name: Install PDF extractor
         run: |
