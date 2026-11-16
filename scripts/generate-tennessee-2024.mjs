@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseCountyReport, transformCountyReport, serialize, sha256, verifySourceChecksum } from './tn-2024-sos-lib.mjs';
 import { verifySevenTicketHeader, parsePrecinctReport, reconcileCountyAndPrecinct } from './tn-2024-sos-precinct-lib.mjs';
-import { assertHistoricalReleaseApproved, historicalReleaseBlockers } from './tn-2024-release-gate.mjs';
+import { assertHistoricalReleaseApproved } from './tn-2024-release-gate.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const base=resolve(root,'packages/data/fixtures/');
 const refs=JSON.parse(readFileSync(resolve(base,'tennessee-counties-2020.json'),'utf8'));
