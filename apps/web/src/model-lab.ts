@@ -31,7 +31,7 @@ interface CanonicalModelApi {
   createScenarioProjectV3?: (sourceElection: ElectionDefinition, sourceUnits: readonly BaseUnitResult[],
     workingElection: ElectionDefinition, workingUnits: readonly BaseUnitResult[],
     scenario: RegistrySandboxSession["scenario"], partition: SyntheticCohortPartition,
-    actions: readonly CohortAction[]) => unknown;
+    actions: readonly CohortAction[], model?: ReturnType<typeof sim.createSyntheticDemoModel>) => unknown;
 }
 const api = sim as typeof sim & CanonicalModelApi;
 export const modelGeneratorReady = typeof api.createSyntheticDemoPartition === "function";
@@ -73,7 +73,8 @@ export function exportProjectWithModel(
   if (!api.createScenarioProjectV3) return unsupported();
   const project = api.createScenarioProjectV3(
     trustedElection, trustedUnits, ordinary.election, ordinary.baseUnits,
-    ordinary.scenario, model.partition, model.actions
+    ordinary.scenario, model.partition, model.actions,
+    sim.createSyntheticDemoModel(model.seed)
   );
   return (sim.serializeScenarioProject as (value: unknown) => string)(project);
 }
