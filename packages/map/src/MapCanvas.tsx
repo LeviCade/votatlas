@@ -25,6 +25,7 @@ export interface MapE2EInspection {
   layerColorExpression: unknown;
   rendered: boolean;
   zoom: number;
+  moving: boolean;
 }
 interface MapE2EWindow extends Window {
   __votatlasMapForE2E?: { inspectCounty: (geoId: string) => MapE2EInspection };
@@ -133,7 +134,7 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
                   fill: (feature?.properties?.fill as string | undefined) ?? null,
                   winnerCandidateId: (feature?.properties?.winnerCandidateId as string | undefined) ?? null,
                   layerColorExpression: map.getPaintProperty(FILL_LAYER, "fill-color"),
-                  rendered, zoom: map.getZoom(),
+                  rendered, zoom: map.getZoom(), moving: map.isMoving(),
                 };
               },
             };

@@ -81,7 +81,7 @@ test("rejected impossible transfer and malformed import do not change results", 
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
   await page.getByLabel("Scenario project JSON · v2 or legacy v1").fill('{"schemaVersion":1,"electionId":"wrong","actions":[]}');
   await page.getByRole("button", { name: "Import JSON" }).click();
-  await expect(page.getByRole("alert")).toContainText("INVALID_SCENARIO");
+  await expect(page.getByRole("alert")).toContainText("SOURCE_MISMATCH");
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
   await expect(page.getByRole("button", { name: "Demographics" })).toBeDisabled();
 });

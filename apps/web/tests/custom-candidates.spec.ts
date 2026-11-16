@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 type Inspection = {
   geoId: string; sourceFeatureCount: number; fill: string | null;
   winnerCandidateId: string | null; layerColorExpression: unknown;
-  rendered: boolean; zoom: number;
+  rendered: boolean; zoom: number; moving: boolean;
 };
 async function inspect(page: import("@playwright/test").Page): Promise<Inspection | null> {
   return page.evaluate(() => {
@@ -30,6 +30,7 @@ test("REAL Census MapLibre geometry: Aster to Cedar winner flip recolors source 
   // DOM-only scoreboard assertion or a fabricated SVG/color swatch.
   await expect.poll(async () => (await inspect(page))?.fill, { timeout: 25000 }).toBe("#7544A6");
   await expect.poll(async () => (await inspect(page))?.rendered).toBe(true);
+  await expect.poll(async () => (await inspect(page))?.moving, { timeout: 10000 }).toBe(false);
   const before = (await inspect(page))!;
   expect(before.winnerCandidateId).toBe("aster");
   await expect(page.getByTestId("selected-county-leader")).toContainText("Aster Rowan");
@@ -45,6 +46,7 @@ test("REAL Census MapLibre geometry: Aster to Cedar winner flip recolors source 
   await page.getByLabel("Transfer (percentage points of candidate ballots)").fill("7");
   await page.getByRole("button", { name: "Apply TRANSFER_PP" }).click();
   await expect.poll(async () => (await inspect(page))?.fill, { timeout: 25000 }).toBe("#B47F15");
+  await expect.poll(async () => (await inspect(page))?.moving, { timeout: 10000 }).toBe(false);
   const after = (await inspect(page))!;
   expect(after.winnerCandidateId).toBe("cedar");
   await expect(page.getByTestId("selected-county-leader")).toContainText("Cedar Vale");
