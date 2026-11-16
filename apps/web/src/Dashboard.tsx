@@ -204,6 +204,26 @@ export function Dashboard({ election, result, baseline, references, scenario, ge
               <button type="button" onClick={onUndo} disabled={scenario.actions.length === 0}>Undo</button>
               <button type="button" onClick={onReset} disabled={scenario.actions.length === 0}>Reset</button>
             </div>
+            <label className="scenario-editor-label" htmlFor="scenario-file">Load a saved scenario file</label>
+            <input id="scenario-file" className="scenario-file" type="file" accept=".json,application/json"
+              aria-label="Import scenario JSON file" onChange={async (event) => {
+                const field = event.currentTarget;
+                const file = field.files?.[0];
+                if (!file) return;
+                if (file.size > 1024 * 1024) {
+                  setActionMessage("Scenario file is too large. Maximum file size is 1 MB.");
+                  field.value = "";
+                  return;
+                }
+                try {
+                  const raw = await file.text();
+                  setScenarioJson(raw);
+                  setActionMessage("");
+                  onImport(raw);
+                } catch {
+                  setActionMessage("Could not read this scenario file.");
+                } finally { field.value = ""; }
+              }} />
             <label className="scenario-editor-label" htmlFor="scenario-json">Scenario JSON · schema v1</label>
             <textarea id="scenario-json" className="scenario-json" rows={3} value={scenarioJson}
               onChange={(event) => setScenarioJson(event.target.value)}

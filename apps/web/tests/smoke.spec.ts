@@ -34,6 +34,8 @@ test("95-county live transfer, undo, reset, JSON replay + screenshot", async ({ 
   expect(afterCedar - beforeCedar).toBe(beforeAster - afterAster);
   expect(beforeState - afterState).toBe(beforeAster - afterAster);
   await expect(page.getByText("1 applied")).toBeVisible();
+  await page.screenshot({ path: info.outputPath("votatlas-after-transfer.png"), fullPage: true });
+  await info.attach("votatlas-after-transfer", { path: info.outputPath("votatlas-after-transfer.png"), contentType: "image/png" });
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export JSON" }).click();
@@ -51,6 +53,13 @@ test("95-county live transfer, undo, reset, JSON replay + screenshot", async ({ 
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
   expect(await votes(page, "county-votes-cedar")).toBe(beforeCedar);
   expect(await votes(page, "state-votes-aster")).toBe(beforeState);
+  await page.getByLabel("Import scenario JSON file").setInputFiles({
+    name: "saved-scenario.json", mimeType: "application/json", buffer: Buffer.from(exported),
+  });
+  await expect(page.getByText(/Imported 1 action/)).toBeVisible();
+  expect(await votes(page, "county-votes-aster")).toBe(afterAster);
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
   await page.screenshot({ path: info.outputPath("votatlas-live-sandbox.png"), fullPage: true });
   await info.attach("votatlas-live-sandbox", { path: info.outputPath("votatlas-live-sandbox.png"), contentType: "image/png" });
 });
