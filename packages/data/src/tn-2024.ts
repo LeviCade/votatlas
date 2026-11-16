@@ -16,12 +16,19 @@ export function getTennessee2024PresidentialProvenance():Tennessee2024SourceProv
 }
 export function getTennessee2024PresidentialFixture():ElectionDataset {
   const metadata=getTennessee2024PresidentialProvenance();
-  const auth=metadata.sourceAuthentication as {officialByteIdentical?:boolean}|undefined;
-  const rights=metadata.rights as {approvalStatus?:string}|undefined;
+  const auth=metadata.sourceAuthentication as {officialByteIdentical?:boolean; independentPublisherEvidence?:{url?:string;retrievedAt?:string;countySha256?:string;precinctSha256?:string}}|undefined;
+  const rights=metadata.rights as {approvalStatus?:string;reviewedBy?:string;reviewedAt?:string}|undefined;
+  const scope=metadata.ballotScope as {approvedSevenTicketOnly?:boolean}|undefined;
   if(!metadata.releaseApproved || metadata.dataStatus!=='official' ||
      !/^[a-f0-9]{64}$/.test(metadata.sourceSha256??'') ||
      !/^[a-f0-9]{64}$/.test(metadata.payloadSha256??'') ||
-     auth?.officialByteIdentical!==true || rights?.approvalStatus!=='approved') {
+     auth?.officialByteIdentical!==true ||
+     auth?.independentPublisherEvidence?.url!==metadata.sourceUrl ||
+     !auth?.independentPublisherEvidence?.retrievedAt ||
+     auth?.independentPublisherEvidence?.countySha256!==metadata.sourceSha256 ||
+     auth?.independentPublisherEvidence?.precinctSha256!==metadata.precinctSourceSha256 ||
+     rights?.approvalStatus!=='approved' || !rights.reviewedBy || !rights.reviewedAt ||
+     scope?.approvedSevenTicketOnly!==true) {
     throw new HistoricalElectionUnavailableError('Tennessee 2024 historical fixture blocked: '+metadata.reason);
   }
   const result=validateElectionDataset(structuredClone(draft),{

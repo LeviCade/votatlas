@@ -91,3 +91,7 @@ node scripts/audit-tennessee-2024-supplied.mjs --county /path/20241105GeneralbyC
 ```
 
 The audit prints checksums and numerical evidence only; it never writes an approved fixture. Negative tests exercise header/candidate mislabeling, missing and duplicate counties, altered counts, incomplete columns, cross-county swaps and GEOID matching. The publication helper also refuses `--write` unless independent official-byte verification and conductor rights approval are expressly recorded AND the precinct report reconciles. CI without user files tests the parser and confirms the no-go gate; **a green CI run alone does not attest the PDFs**. Do not mark Issue #20 completed or deliver an official fixture until the separate provenance and rights signoffs are documented.
+
+## Round Five historical original-source authentication
+
+The seven-ticket by-office SOS publisher-indexed text independently confirms the 3,063,942 reported total. This is **not** proof of original government file-byte identity. See [SOURCE_AUTHENTICATION_2024_R5.md](SOURCE_AUTHENTICATION_2024_R5.md) for precise source evidence, unknown categories, rights analysis, two required additional original files and reproducible auditor commands. The historical fixture and getter remain BLOCKED.
