@@ -11,7 +11,7 @@ Votatlas is a map-first, **candidate-neutral election simulation laboratory**. E
 - Exact baseline reproduction, deterministic calculations, explicit data provenance, and clearly disclosed model uncertainty.
 
 ## Project status — November 15, 2026
-**Round Two integrated — first playable synthetic Tennessee prototype.** The 95-county Census-derived map, candidate-neutral pure simulation, live county/state recalculation, Undo/Reset, JSON scenario replay, and desktop/mobile Chromium acceptance are all implemented on `integration`. **The vote totals are fictional, not observed election returns.** Real 2024 returns, custom candidate UI, portable custom scenario projects and demographic controls remain future work. `main` is not yet released; release gate [#4](https://github.com/LeviCade/votatlas/issues/4) and rights/license gate [#5](https://github.com/LeviCade/votatlas/issues/5) remain open.
+**Round Three integrated — custom-candidate Tennessee sandbox is operational.** The 95 real Census-derived county polygons, candidate-neutral math, dynamic candidate editor, map winner-color flip, Undo/Reset, and canonical v2 scenario-project roundtrip are verified by native CI and desktop/mobile Chromium. **All currently displayed vote results are SYNTHETIC, not observed election returns.** Issue #4 first playable prototype is complete. Historical TN2024 dataset remains source-blocked under Issue #20, and software license/data-rights gate #5 remains OPEN; main is not yet publicly released.
 
 ## Engineering entry points
 - [Product vision](docs/PRODUCT_VISION.md)
