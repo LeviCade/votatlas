@@ -2,7 +2,8 @@
 
 **GitHub repository:** LeviCade/votatlas.
 **Conductor integration branch:** integration.
-**Engineer branches:** feature/v0.1-e1-map-ui, feature/v0.1-e2-candidate-engine, feature/v0.1-e3-data-ci.
+**Round One branches (merged):** feature/v0.1-e1-map-ui, feature/v0.1-e2-candidate-engine, feature/v0.1-e3-data-ci.
+**Round Two branches (active kickoff):** feature/v0.1-r2-e1-live-ui, feature/v0.1-r2-e2-core-hardening, feature/v0.1-r2-e3-real-tn-map.
 
 ## Ownership
 - E1: apps/web/** and packages/map/**, including tests located there.

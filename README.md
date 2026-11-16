@@ -11,7 +11,7 @@ Votatlas is a map-first, **candidate-neutral election simulation laboratory**. E
 - Exact baseline reproduction, deterministic calculations, explicit data provenance, and clearly disclosed model uncertainty.
 
 ## Project status — November 15, 2026
-**Foundation phase.** Documentation and engineering contracts are being committed; application code is not yet shipped. Tennessee synthetic-fixture proof of concept is the first release gate.
+**Round One integrated; Round Two in progress.** The repository now has a candidate-neutral pure simulation engine, reproducible 95-county fictional Tennessee fixture, a React/MapLibre preview UI, and passing workspace/browser CI. **The UI still shows 10 schematic counties and only queues actions; it does not yet display live simulated results or real county boundaries.** The first playable v0.1 gate is tracked in [Issue #4](https://github.com/LeviCade/votatlas/issues/4).
 
 ## Engineering entry points
 - [Product vision](docs/PRODUCT_VISION.md)
