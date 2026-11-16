@@ -144,6 +144,11 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
     const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
     source?.setData(counties);
     map.setFilter(SELECTED_LAYER, ["==", ["get", "geoId"], selectedGeoId ?? ""]);
+    const shape = counties.features.find((feature) => feature.properties.geoId === selectedGeoId);
+    if (shape) {
+      const bounds = boundsForCounties({ type: "FeatureCollection", features: [shape] });
+      if (bounds) map.fitBounds(bounds, { padding: 70, duration: 350, maxZoom: 8 });
+    }
   }, [counties, selectedGeoId, status]);
 
   return (

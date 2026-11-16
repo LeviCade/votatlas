@@ -75,12 +75,13 @@ export function Dashboard({ election, result, counties, onAdjustment, queuedCoun
   const selectedShape = counties.features.find((f) => f.properties.geoId === selectedId);
   const selectedUnit = result.units.find((unit) => unit.geoId === selectedId) ?? null;
   const hoveredShape = counties.features.find((f) => f.properties.geoId === hoveredId);
-  const stateTotals = result.byState["47"] ?? result.national;
+  const stateId = selectedUnit?.stateId ?? result.units[0]?.stateId ?? "47";
+  const stateTotals = result.byState[stateId] ?? result.national;
   const candidateBallots = candidates.reduce((total, c) => total + (stateTotals.votes[c.id] ?? 0), 0);
   const filteredCounties = counties.features.filter((feature) =>
     (feature.properties.name + " " + feature.properties.geoId).toLowerCase().includes(search.toLowerCase().trim()));
   const scope = (): GeoScope | null => scopeChoice === "state"
-    ? { kind: "state", stateId: "47" }
+    ? { kind: "state", stateId }
     : selectedId ? { kind: "county", countyIds: [selectedId] } : null;
 
   function sendAdjustment(make: (resolvedScope: GeoScope) => Adjustment | null) {
