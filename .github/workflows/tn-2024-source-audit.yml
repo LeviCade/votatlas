@@ -1,0 +1,56 @@
+name: Tennessee 2024 SOS source audit (no public release)
+on:
+  push:
+    branches: [feature/v0.1-r3-e3-official-tn-2024]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify reproducible parser and historical fixture remains blocked
+        run: |
+          node --test scripts/tn-2024-sos-validation.test.mjs
+          node scripts/generate-tennessee-2024.mjs --check
+      - name: Install PDF extractor
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y poppler-utils
+      - name: Access original Tennessee Secretary of State PDF
+        id: official
+        shell: bash
+        run: |
+          set +e
+          http_code=$(curl --location --silent --show-error --retry 2 --retry-delay 2 \
+            --write-out '%{http_code}' --output /tmp/tn2024.pdf \
+            'https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105GeneralbyCounty.pdf')
+          curl_code=$?
+          set -e
+          if [[ "$curl_code" -ne 0 || "$http_code" -ne 200 ]] || ! head -c 5 /tmp/tn2024.pdf | grep -q '%PDF-'; then
+            echo 'status=blocked' >> "$GITHUB_OUTPUT"
+            echo "::warning::SOURCE NO-GO: Tennessee SOS original PDF was not accessible (HTTP $http_code; curl $curl_code). No original-source checksum or historical fixture can be certified."
+            {
+              echo '## Tennessee 2024 historical source: BLOCKED'
+              echo ''
+              echo "The original Tennessee SOS by-county PDF was inaccessible (HTTP $http_code; curl exit $curl_code)."
+              echo 'This is a documented source blocker, **not** a source verification success.'
+              echo 'Historical fixture remains unavailable. No synthetic or secondary data substituted.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'status=available' >> "$GITHUB_OUTPUT"
+            sha256sum /tmp/tn2024.pdf
+          fi
+      - name: Audit 95 official county rows and seven independent statewide candidate totals
+        if: steps.official.outputs.status == 'available'
+        run: node scripts/generate-tennessee-2024.mjs --audit --source /tmp/tn2024.pdf
+      - name: Confirm documented no-go on original-source access failure
+        if: steps.official.outputs.status == 'blocked'
+        run: |
+          node scripts/generate-tennessee-2024.mjs --check
+          echo '## Outcome: SOURCE ACCESS BLOCKER — NO RELEASE' >> "$GITHUB_STEP_SUMMARY"

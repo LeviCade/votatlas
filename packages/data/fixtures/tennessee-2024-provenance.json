@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "tn-2024-president-sos-seven-ticket-v1",
+  "dataStatus": "blocked",
+  "releaseApproved": false,
+  "reason": "SOURCE_SHA_AND_RIGHTS_WRITEINS_SCOPE_REVIEW_PENDING",
+  "publisher": "Tennessee Secretary of State, Division of Elections",
+  "electionDate": "2024-11-05",
+  "publicationDate": "2024-12-02",
+  "sourceUrl": "https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105GeneralbyCounty.pdf",
+  "officeUrl": "https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105GeneralbyOffice.pdf",
+  "precinctUrl": "https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105GeneralbyPrecinct.pdf",
+  "precinctSpreadsheetUrl": "https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105AllbyPrecinct.xlsx",
+  "sourceSha256": null,
+  "sourceBytes": null,
+  "payloadSha256": null,
+  "generation": "scripts/generate-tennessee-2024.mjs: original SOS PDF pages 1 and 2 parsed with pdftotext -layout, 95 rows; verified against original county STATE TOTALS and separate SOS by-office totals",
+  "geography": "Census 2020 five-character Tennessee county GEOIDs, exact name crosswalk",
+  "printedCandidateTotals": [
+    1966865,
+    1056265,
+    5865,
+    3457,
+    988,
+    21535,
+    8967
+  ],
+  "printedTicketTotal": 3063942,
+  "ballotScope": {
+    "namedCandidates": "Only 7 printed presidential tickets in SOS county PDF",
+    "writeIns": "Not in SOS seven-column county PDF. No observed county write-in counts; none are guessed or backallocated.",
+    "otherBallots": "Proposed otherBallots=0 means no extra categories INCLUDED IN THIS SEVEN-TICKET MODEL, not proof of zero write-ins or undervotes.",
+    "comparisons": "Secondary atlas reports 8,682 write-ins, 3,072,624 presidential votes and 3,090,161 ballots cast; NOT adopted as primary-source county observations",
+    "eligibleVoters": "null for every county; synthetic 2026 eligibility never reused"
+  },
+  "rights": {
+    "rawPDF": "Tennessee state records are not automatically US federal public domain under 17 USC 105. No original PDF redistributed.",
+    "factualResults": "Election totals and names are facts, not protected expression under 17 USC 102(b) and Feist; independent normalized facts only.",
+    "approvalStatus": "Conductor decision about state website terms / redistribution pending"
+  }
+}
