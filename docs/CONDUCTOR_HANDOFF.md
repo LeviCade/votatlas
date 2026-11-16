@@ -1,57 +1,60 @@
 # Votatlas — Living Conductor Handoff
 
-## LATEST CHECKPOINT — 2026-11-15 / Round One completed, Round Two prepared
+## CHECKPOINT — 2026-11-15 / ROUND TWO ACCEPTED, ROUND THREE PLANNED
 
-Repository: https://github.com/LeviCade/votatlas (public).
-Default branch: main (not yet promoted; foundation only).
-Working branch: integration.
-Last verified integration code SHA before this checkpoint: 1de74c9a6a021052dac381a41d929e716cd5c7ae.
-This documentation checkpoint itself will advance integration. Always retrieve LIVE branch head before dispatch or merge. Do not assume the SHA printed above is current.
+Repo: https://github.com/LeviCade/votatlas (public).
+Default branch: `main` (NOT RELEASED, still kickoff).
+Conductor work branch: `integration`.
+**Last fully CI-verified R2 integration SHA (before this documentation commit):** `1d7a4fcbeb9784d298d027ca1fd79289d572a1ef`.
+After this checkpoint commit, obtain LIVE `integration` SHA from GitHub rather than reusing this old code SHA. R3 branches are to be created from one identical docs-published integration head; Issue #4 kickoff comment will pin it.
 
-### Verified accepted PRs
-- PR #9 conductor pnpm lockfile, squash SHA 3c5bc363264969910410959e99b36b844e29d4ca. Bootstrap workflow generated lockfile and was deleted. Pin pnpm 9.15.9.
-- PR #7 Engineer 3 data, 95 TN synthetic county results + source rights/validation/CI, squash SHA 306fc7304d27a5f69bb196740b1c24c5e7bd32bc.
-- PR #8 Engineer 2 candidate-neutral pure simulator, squash SHA e9a5285bf6b096dda220ba154058e8b2175d4c17.
-- PR #6 Engineer 1 map-first React/MapLibre workbench, squash SHA 1de74c9a6a021052dac381a41d929e716cd5c7ae. Conductor fixed incompatible maplibre.supported API call and added separate web-smoke workflow.
-- These four PRs merged to integration. No round-two feature PRs accepted yet. main is not a release.
+### Accepted code, exact merge SHAs
+R1 conductor lock PR #9: `3c5bc363264969910410959e99b36b844e29d4ca`.
+R1 E3 data/CI PR #7: `306fc7304d27a5f69bb196740b1c24c5e7bd32bc`.
+R1 E2 engine PR #8: `e9a5285bf6b096dda220ba154058e8b2175d4c17`.
+R1 E1 preview PR #6: `1de74c9a6a021052dac381a41d929e716cd5c7ae`.
+R2 E2 candidate-registry PR #15: `bfe50b3381283c33663a3704c7da937096df0a95`.
+R2 E3 real Census geometry PR #16: `520f977bc6032fdb437263de69e82ce9c8c21210`.
+R2 conductor root pnpm-lockfile PR #17: `35b16e6287d488d81d0dc92a33b41702d6fd37f4`.
+R2 E1 live 95-county UI PR #14: `1d7a4fcbeb9784d298d027ca1fd79289d572a1ef`.
+All merged to integration with squash reviews; R2 issues #10–13 closed.
 
-### Verified CI
-- Full workspace CI on final Round One integration SHA: https://github.com/LeviCade/votatlas/actions/runs/43791004727 (SUCCESS).
-- Desktop/mobile Playwright on final Round One integration SHA: https://github.com/LeviCade/votatlas/actions/runs/43791004716 (SUCCESS).
-- E3 validated 95-county fixture / 17 source regressions and full CI: https://github.com/LeviCade/votatlas/actions/runs/43790155354.
-- E2 native workspace CI: https://github.com/LeviCade/votatlas/actions/runs/43790317300.
-- E1 native workspace CI: https://github.com/LeviCade/votatlas/actions/runs/43790829022; browser smoke: https://github.com/LeviCade/votatlas/actions/runs/43790829008.
+### GREEN VERIFIED CI — 2026-11-15
+Full workspace: https://github.com/LeviCade/votatlas/actions/runs/43797036632 (SUCCESS on merge SHA 1d7a4fcb).
+Desktop+mobile Chromium smoke: https://github.com/LeviCade/votatlas/actions/runs/43797036661 (SUCCESS on merge SHA 1d7a4fcb).
+PR #14 combined CI: https://github.com/LeviCade/votatlas/actions/runs/43796889146 and browser https://github.com/LeviCade/votatlas/actions/runs/43796888926 (both SUCCESS).
+PR #15: https://github.com/LeviCade/votatlas/actions/runs/43793452448.
+PR #16: https://github.com/LeviCade/votatlas/actions/runs/43793974896, pinned-source regeneration https://github.com/LeviCade/votatlas/actions/runs/43793969142.
+Conductor real-pnpm lock bootstrap https://github.com/LeviCade/votatlas/actions/runs/43796510479 (SUCCESS; temporary privileged workflow REMOVED before PR #17).
 
-### VERIFIED BEHAVIOR / NOT YET WORKING
-Works: all packages typecheck/test/build in CI; map workbench renders with ten intentionally schematic county tiles; simulated sample scoreboard and accessible selection; controls queue typed action and visibly say totals stay static; 95-county synthetic data package validated; engine separately calculates deterministic candidate-neutral adjustments.
-NOT WORKING END TO END: UI is not yet connected to sim-core and 95-county fixture. Map doesn't yet show real Tennessee county polygons. Undo/reset/scenario import/export is not wired in the UI. No custom candidate builder or demographic controls are live. Never claim "playable Votatlas v0.1" until all required end-to-end gates pass.
+### FUNCTIONAL PRODUCT (currently synthetic only)
+- App uses real Census-derived TN 2020 county shapes (95 GEOIDs) through MapLibre. Real map is visible in passing Chrome screenshots.
+- `getTennesseeSyntheticFixture()`: 95 county vote records for Aster/Briar/Cedar, all fictional, explicitly marked synthetic. Candidate-neutral multi-candidate scoreboard.
+- User can search/select Davidson (47037), transfer 5 percentage points from Aster to Cedar, and observe exact county and statewide recalculation from `simulateElection`; other counties unchanged.
+- UI Undo, Reset, downloadable/importable v1 action scenario JSON, error handling, WebGL fallback, responsive layout. Desktop/mobile Playwright proves these.
+- E2 pure `addCandidate`, `renameCandidate`, `removeZeroVoteCandidate` are available but **NO candidate editor in UI yet**. V1 scenario files omit expanded registry. E2 registry removal checks zero BASELINE votes, not active scenario history; E1 must not expose unsafe removal.
+- **Map winner-flip color after >5pp changes not yet covered by browser test**; preserve Issue #4 release gate until expressly validated. Existing screenshots show real geometry and 5pp changes; this particular synthetic Davidson county remains Aster by a tiny margin after 5pp.
+- Demographic controls disabled intentionally. No real elections/official vote results loaded yet. No national/district/precinct simulation.
+- Code license not chosen, Issue #5 OPEN. `main` not promoted and no public release.
 
-### Round Two issues and prompt files
-- Issue #10: E1 live UI wiring, prompt prompts/ENGINEER_1_ROUND_2.md.
-- Issue #11: E2 dynamic candidate registry and multistep math hardening, prompt prompts/ENGINEER_2_ROUND_2.md.
-- Issue #12: E3 real licensed 95-county geometry, prompt prompts/ENGINEER_3_ROUND_2.md.
-- Issue #4: conductor end-to-end release gate (still OPEN).
-- Issue #5: repository license and data rights (still OPEN).
-- Planned Round Two branches: feature/v0.1-r2-e1-live-ui, feature/v0.1-r2-e2-core-hardening, feature/v0.1-r2-e3-real-tn-map. Branch only after reading LIVE integration head; all start from identical commit.
+### Round Three planned work / owners
+E1 Issue #18: UI custom candidate management, v2 scenario project integration, direct map leader-flip test. Prompt `prompts/ENGINEER_1_ROUND_3.md`, branch `feature/v0.1-r3-e1-custom-candidates`.
+E2 Issue #19: pure versioned scenario-project serialization+hydration (expanded candidate registry + source identity), active-history removal safety, v1 backwards compatibility. Prompt `prompts/ENGINEER_2_ROUND_3.md`, branch `feature/v0.1-r3-e2-portable-scenarios`.
+E3 Issue #20: first authoritative 2024 Tennessee presidential county return fixture, official source audit/rights/reconciliation. Prompt `prompts/ENGINEER_3_ROUND_3.md`, branch `feature/v0.1-r3-e3-official-tn-2024`. **E3 starts in a brand new chat; that prompt is fully self-contained.**
+Conductor owns pnpm-lockfile, canonical contracts, final acceptances, docs, source rights release gate and merge order.
 
-### Conductor's next critical actions
-1. Coordinate required apps/web/package.json dependencies @votatlas/data and @votatlas/sim-core and regenerate pnpm-lock.yaml using real pnpm on GH-hosted runner after manifest updates. Never weaken frozen-lockfile CI.
-2. Dispatch the three Round Two prompts at exact fresh integration SHA.
-3. Review issues and PRs; only merge verified green source with ownership audit and license checks.
-4. Prove 95-county real map with working selected-county candidate transfer, statewide rollup, undo/reset and JSON roundtrip in Chromium desktop/mobile.
-5. Update this file after every accepted PR. Promote integration -> main only when release gate #4 passes.
+### Global control rules
+- E1 owns apps/web/** packages/map/** only.
+- E2 owns packages/sim-core/** only.
+- E3 owns packages/data/** scripts/** .github/workflows/** only.
+- Conductor owns root files, packages/contracts/**, docs/**, prompts/**, merges.
+- Branch from current R3 exact integration HEAD after docs commit; not from main or old R2 branch.
+- Native CI + Playwright must pass on true PR merged base, then on integration after acceptance.
+- No copying ElectIndex scripts, bundled datasets, maps or visual assets. All observed data require independent authoritative source and licensing checks.
+- Use technical truth: no 'official' label for synthetic votes or unverified secondary records, and no 'public release' without #5 resolution.
 
-### Ownership and rules
-E1 apps/web/**, packages/map/**.
-E2 packages/sim-core/**.
-E3 packages/data/**, scripts/**, .github/workflows/**.
-Conductor root workspace/pnpm lock, contracts, docs/prompts, integrator reviews and release governance. Avoid cross-owner edits except explicitly documented conductor integration repairs.
-Do not commit proprietary ElectIndex source/data/images; use independent code and rights-reviewed public data.
-Code license not chosen yet. No automated outside contributions or main release without decision.
-Promote by passing verified gates, not percentages.
-
-### Recovery for future conductor chats
-1. Read this handoff, README, docs/ARCHITECTURE.md, docs/CONTRACTS.md, docs/ENGINEERING_OWNERSHIP.md, docs/TESTING_AND_ACCEPTANCE.md, and latest three round prompts.
-2. Query live main/integration and PR heads; inspect CI jobs/logs. Never rely solely on past chat or checkpoint SHA.
-3. Audit changed files against ownership, run/check tests, merge via integration, update this checkpoint with exact SHA and link.
-4. Report precisely which v0.1 user journey is functional and what remains blocked.
+### Recovering in another chat
+1. Query LIVE integration SHA, PR/issue heads, latest CI. Read this handoff, ownership, architecture, contracts, test plan and Round Three prompts.
+2. Verify PR diff paths, exact HEAD SHA, CI job logs, numerical invariants, proof of browser behavior and source rights.
+3. On approved PRs merge to integration; update this handoff. Regenerate root pnpm-lock.yaml via pinned pnpm if E1 adds workspace deps; don't disable frozen CI.
+4. Main branch remains unpromoted until issue #4 final proof and issue #5 license/rights decision. Never infer chat activity from git without checking exact source.
