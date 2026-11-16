@@ -192,13 +192,20 @@ export function MapCanvas({ counties, selectedGeoId, selectedGeoIds, focusSelect
     if (!map || status !== "ready") return;
     const highlighted = selectedGeoIds ?? (selectedGeoId ? [selectedGeoId] : []);
     map.setFilter(SELECTED_LAYER, ["in", ["get", "geoId"], ["literal", highlighted]]);
-    if (!focusSelected) return;
+  }, [selectedGeoId, selectedGeoIds, status]);
+
+  // Focusing is deliberately independent of the highlighted set and vote updates.
+  // Toggling a selection, adding counties, or changing candidate support never
+  // overwrites a user's current map zoom.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready" || !focusSelected) return;
     const shape = latestRef.current.counties.features.find(feature => feature.properties.geoId === selectedGeoId);
     if (shape) {
       const bounds = boundsForCounties({ type: "FeatureCollection", features: [shape] });
       if (bounds) map.fitBounds(bounds, { padding: 70, duration: 350, maxZoom: 8 });
     }
-  }, [selectedGeoId, selectedGeoIds, focusSelected, status]);
+  }, [selectedGeoId, focusSelected, status]);
 
   return (
     <div className="map-host" data-testid="county-map-real" aria-label="Interactive geographic county map">
