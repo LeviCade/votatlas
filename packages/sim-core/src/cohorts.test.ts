@@ -72,6 +72,14 @@ describe("R4 explicitly synthetic, disjoint cohort mathematics", () => {
       conservation(changed, baseline, ids);
     });
   }
+  it("cohort tie-break order is locale-independent code-unit ordering", () => {
+    const { election, baseline, partition } = sample(2, 1);
+    const names = ["_z", "A", "a"];
+    partition.cohorts.forEach((cohort, i) => { cohort.id = names[i]!; });
+    partition.counties[0]!.cells.forEach((cell, i) => { cell.cohortId = names[i]!; });
+    const result = simulateCohortPartition(election, baseline, partition);
+    expect(result.cells.map(cell => cell.cohortId)).toEqual([...names].sort());
+  });
   it("turnout applies to selected cohort's explicit full-ballot denominator; untouched cohorts/county stay unchanged", () => {
     const { election, baseline, partition } = sample(3, 3);
     const res = simulateCohortPartition(election, baseline, partition,
