@@ -16,9 +16,12 @@ export function getTennessee2024PresidentialProvenance():Tennessee2024SourceProv
 }
 export function getTennessee2024PresidentialFixture():ElectionDataset {
   const metadata=getTennessee2024PresidentialProvenance();
+  const auth=metadata.sourceAuthentication as {officialByteIdentical?:boolean}|undefined;
+  const rights=metadata.rights as {approvalStatus?:string}|undefined;
   if(!metadata.releaseApproved || metadata.dataStatus!=='official' ||
      !/^[a-f0-9]{64}$/.test(metadata.sourceSha256??'') ||
-     !/^[a-f0-9]{64}$/.test(metadata.payloadSha256??'')) {
+     !/^[a-f0-9]{64}$/.test(metadata.payloadSha256??'') ||
+     auth?.officialByteIdentical!==true || rights?.approvalStatus!=='approved') {
     throw new HistoricalElectionUnavailableError('Tennessee 2024 historical fixture blocked: '+metadata.reason);
   }
   const result=validateElectionDataset(structuredClone(draft),{
@@ -28,6 +31,13 @@ export function getTennessee2024PresidentialFixture():ElectionDataset {
      result.election.dataStatus!=='official' || result.election.candidates.length!==7 ||
      result.units.some(row=>row.eligibleVoters!==null)) {
     throw new HistoricalElectionUnavailableError('Unapproved / inconsistent historical data');
+  }
+  const ids=['tn24-trump-vance','tn24-harris-walz','tn24-bowman-bowman','tn24-delacruz-garcia',
+    'tn24-fruit-richter','tn24-kennedy-shanahan','tn24-stein-kpadenou'];
+  const totals=[1966865,1056265,5865,3457,988,21535,8967];
+  if(result.election.candidates.some((candidate,i)=>candidate.id!==ids[i] || candidate.ballotOrder!==i) ||
+     ids.some((id,i)=>result.units.reduce((sum,unit)=>sum+(unit.votes[id]??0),0)!==totals[i])) {
+    throw new HistoricalElectionUnavailableError('Published ticket identities or official totals differ from SOS source');
   }
   return result;
 }

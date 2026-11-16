@@ -68,3 +68,26 @@ Official primary: https://sos-prod.tnsosgovfiles.com/s3fs-public/document/202411
 The source parser requires original PDF bytes and pdftotext -layout, all 95 exact county names/GEOIDs, ordered rows, seven integers per row, agreement with the printed statewide total and the independent by-office SOS results. It reports original file SHA-256, proposed fixture SHA-256 and exact vote totals. Run: node --test scripts/tn-2024-sos-validation.test.mjs ; node scripts/generate-tennessee-2024.mjs --check ; node scripts/generate-tennessee-2024.mjs --audit --source /path/to/official.pdf. The feature-branch GitHub source-audit workflow downloads and parses the original official file. Its audit output does not publish data. The historical API getTennessee2024PresidentialFixture() throws HistoricalElectionUnavailableError until source and rights are approved; provenance is exposed through getTennessee2024PresidentialProvenance(). Synthetic ballots and geometry are unchanged.
 
 Rights: Tennessee SOS documents are not automatically federal public domain under 17 USC 105. The original PDF is not redistributed. Factual vote counts are uncopyrightable facts under 17 USC 102(b) and Feist; nonetheless Tennessee site usage terms and data-release signoff are pending conductor review. The machine-readable manifest holds the no-go status, source URLs, row/reconciliation semantics and rights assessment.
+
+## Round Four — owner-supplied SOS report audit (2026-11-15)
+
+**Reconciliation succeeded, release remains BLOCKED.** The repository owner supplied two original-format Tennessee SOS reports for the November 5, 2024 State General election: `20241105GeneralbyCounty.pdf` (28 pages, 150,933 bytes) and `20241105GeneralbyPrecinct.pdf` (225 pages, 1,626,347 bytes). The reports print December 2, 2024. Their embedded creation metadata reads November 25, 2024; do not confuse either timestamp with an independently verified certification date.
+
+- County PDF SHA-256: `bd4437b045f592b141bad458d179160c9e7626beb545f7da2dd107305dbb817f`.
+- Precinct PDF SHA-256: `5e7c41d6b53378a4c267098d0122f15749a8d538681ec26d3e315e5962a5f99b`.
+- Stable seven-ticket county row JSON SHA-256: `7d32c6e7067222a41a094475a0746c6e178b0ffb80e30542a8e321ac9743fbcf`.
+- `95/95` county rows agree between the PDF reports, each with seven columns and complete 2020 Census county GEOID mapping. `1,862` precinct results individually sum to their 95 reported county subtotals. Statewide independent totals per ticket: `1,966,865; 1,056,265; 5,865; 3,457; 988; 21,535; 8,967`; seven-ticket sum `3,063,942`.
+- Seven printed tickets **exclude** write-ins. County write-in results, presidential undervotes, total ballots cast and eligible-voter denominators are not reported in these seven candidate columns. They remain **unknown**, not zero. No external atlas counts are mixed into primary-source observations.
+
+Both primary source URLs are linked in `tennessee-2024-provenance.json`. The SOS publisher's linked reports were independently readable as indexed text, matching their headings and printed vote totals, but **original publisher PDF binary retrieval returned HTTP 403 in automation**. The two user-supplied PDFs are now pinned by SHA-256; their **byte identity with a fresh original SOS-domain download is NOT proven**. A self-contained hash proves later files match the user-supplied inputs, not that a government server signed them. This is a source-authentication gate, not a statement that the totals are fictional. Raw PDFs are **not committed or redistributed**; the conductor must explicitly approve usage terms/rights, authoritative-byte authentication and seven-ticket-only scope before opening historical API access.
+
+Reproduce locally with both original PDFs available, Node 22 and Poppler's `pdftotext`:
+
+```sh
+node --test scripts/tn-2024-sos-validation.test.mjs
+node --test scripts/tn-2024-precinct-validation.test.mjs
+node scripts/generate-tennessee-2024.mjs --check
+node scripts/audit-tennessee-2024-supplied.mjs --county /path/20241105GeneralbyCounty.pdf --precinct /path/20241105GeneralbyPrecinct.pdf
+```
+
+The audit prints checksums and numerical evidence only; it never writes an approved fixture. Negative tests exercise header/candidate mislabeling, missing and duplicate counties, altered counts, incomplete columns, cross-county swaps and GEOID matching. The publication helper also refuses `--write` unless independent official-byte verification and conductor rights approval are expressly recorded AND the precinct report reconciles. CI without user files tests the parser and confirms the no-go gate; **a green CI run alone does not attest the PDFs**. Do not mark Issue #20 completed or deliver an official fixture until the separate provenance and rights signoffs are documented.

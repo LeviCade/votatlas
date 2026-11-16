@@ -3,7 +3,7 @@
   "datasetId": "tn-2024-president-sos-seven-ticket-v1",
   "dataStatus": "blocked",
   "releaseApproved": false,
-  "reason": "SOURCE_SHA_AND_RIGHTS_WRITEINS_SCOPE_REVIEW_PENDING",
+  "reason": "SOURCE_OWNER_SUPPLIED_HASHED_AND_RECONCILED__UPSTREAM_BYTE_AUTHENTICATION_AND_RIGHTS_REVIEW_PENDING",
   "publisher": "Tennessee Secretary of State, Division of Elections",
   "electionDate": "2024-11-05",
   "publicationDate": "2024-12-02",
@@ -11,10 +11,10 @@
   "officeUrl": "https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105GeneralbyOffice.pdf",
   "precinctUrl": "https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105GeneralbyPrecinct.pdf",
   "precinctSpreadsheetUrl": "https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105AllbyPrecinct.xlsx",
-  "sourceSha256": null,
-  "sourceBytes": null,
+  "sourceSha256": "bd4437b045f592b141bad458d179160c9e7626beb545f7da2dd107305dbb817f",
+  "sourceBytes": 150933,
   "payloadSha256": null,
-  "generation": "scripts/generate-tennessee-2024.mjs: original SOS PDF pages 1 and 2 parsed with pdftotext -layout, 95 rows; verified against original county STATE TOTALS and separate SOS by-office totals",
+  "generation": "scripts/audit-tennessee-2024-supplied.mjs: compare owner-supplied original-format county PDF pp. 1-2 to entire precinct PDF (1,862 precinct rows), exact 95 FIPS 2020 joins, seven candidate labels, SHA256 and printed/statewide totals; no published dataset",
   "geography": "Census 2020 five-character Tennessee county GEOIDs, exact name crosswalk",
   "printedCandidateTotals": [
     1966865,
@@ -30,12 +30,23 @@
     "namedCandidates": "Only 7 printed presidential tickets in SOS county PDF",
     "writeIns": "Not in SOS seven-column county PDF. No observed county write-in counts; none are guessed or backallocated.",
     "otherBallots": "Proposed otherBallots=0 means no extra categories INCLUDED IN THIS SEVEN-TICKET MODEL, not proof of zero write-ins or undervotes.",
-    "comparisons": "Secondary atlas reports 8,682 write-ins, 3,072,624 presidential votes and 3,090,161 ballots cast; NOT adopted as primary-source county observations",
+    "comparisons": "Secondary atlas reports 8,682 write-ins, 3,072,624 presidential votes and 3,090,161 ballots cast; NOT adopted as primary-source county observations; independent precinct PDF county subtotals match all 95 county PDF rows, but neither supplies county write-ins or ballot denominators",
     "eligibleVoters": "null for every county; synthetic 2026 eligibility never reused"
   },
   "rights": {
     "rawPDF": "Tennessee state records are not automatically US federal public domain under 17 USC 105. No original PDF redistributed.",
     "factualResults": "Election totals and names are facts, not protected expression under 17 USC 102(b) and Feist; independent normalized facts only.",
-    "approvalStatus": "Conductor decision about state website terms / redistribution pending"
+    "approvalStatus": "PENDING: conductor explicit review required; no raw PDF distributed; no seven-ticket dataset published"
+  },
+  "precinctSourceSha256": "5e7c41d6b53378a4c267098d0122f15749a8d538681ec26d3e315e5962a5f99b",
+  "precinctSourceBytes": 1626347,
+  "countyRowsSha256": "7d32c6e7067222a41a094475a0746c6e178b0ffb80e30542a8e321ac9743fbcf",
+  "precinctCount": 1862,
+  "sourceAuthentication": {
+    "method": "owner-supplied-PDFs-not-yet-byte-verified-against-Tennessee-SOS-host",
+    "officialByteIdentical": false,
+    "evidence": "Two original-formatted owner-supplied PDFs: independent county report (28 pp.) and precinct report (225 pp.). Both print December 2, 2024; PDF metadata creation is November 25, 2024. Tennessee SOS official live URLs and candidate/state rows were publicly cross-checked, but their binary URLs return HTTP 403 in automated access; no independently obtained publisher SHA256 exists.",
+    "sourceAcquisition": "Direct conversation upload by repository owner on 2026-11-15; no published upstream byte checksum or verifiable download signature.",
+    "upstreamVerificationRequired": "Download the original county AND precinct PDFs from official SOS domain in controlled environment, compare exact SHA-256 bytes to owner copies; record date, download evidence and host response; resolve any mismatch before release."
   }
 }

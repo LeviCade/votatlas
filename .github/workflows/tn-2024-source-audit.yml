@@ -1,7 +1,9 @@
 name: Tennessee 2024 SOS source audit (no public release)
 on:
   push:
-    branches: [feature/v0.1-r3-e3-official-tn-2024]
+    branches: [feature/v0.1-r4-e3-official-source]
+  pull_request:
+    branches: [integration]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,6 +19,7 @@ jobs:
       - name: Verify reproducible parser and historical fixture remains blocked
         run: |
           node --test scripts/tn-2024-sos-validation.test.mjs
+          node --test scripts/tn-2024-precinct-validation.test.mjs
           node scripts/generate-tennessee-2024.mjs --check
       - name: Install PDF extractor
         run: |
