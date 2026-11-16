@@ -7,11 +7,13 @@ import type { CountyShapes } from "@votatlas/map";
 import type { CountyReference } from "@votatlas/data";
 import { SchematicAtlas } from "./SchematicAtlas";
 import { CandidateEditor } from "./CandidateEditor";
-import type { CandidateAddition } from "@votatlas/sim-core";
+import type { CandidateAddition, CohortAction } from "@votatlas/sim-core";
+import { ModelLab } from "./ModelLab";
+import type { SyntheticModelSession } from "./model-lab";
 import { normalizedCountyIds, resolveScope, selectedCountyIds, summarizeScope } from "./geo-scope";
 import type { GeographicScopeMode, ScopeSnapshot } from "./geo-scope";
 
-type TabName = "Election" | "Candidates" | "Local" | "Style";
+type TabName = "Election" | "Candidates" | "Local" | "Style" | "Model Lab";
 const formatNumber = (value: number) => new Intl.NumberFormat("en-US").format(value);
 const percentOf = (votes: number, total: number) => total > 0 ? 100 * votes / total : 0;
 const actionId = () => "ui-" + (typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -20,7 +22,16 @@ const actionId = () => "ui-" + (typeof crypto !== "undefined" && "randomUUID" in
 export interface DashboardProps {
   election: ElectionDefinition;
   result: SimulationResult;
+  ordinaryResult?: SimulationResult;
   baseline: SimulationResult;
+  model?: SyntheticModelSession | null;
+  modelGeneratorReady?: boolean;
+  canonicalV3Ready?: boolean;
+  onBeginModel?: (seed: string) => boolean;
+  onModelAction?: (action: CohortAction) => boolean;
+  onUndoModel?: () => void;
+  onResetModel?: () => void;
+  onExitModel?: () => void;
   trustedSource: ElectionDefinition;
   references: readonly CountyReference[];
   scenario: Scenario;
@@ -110,10 +121,14 @@ function ScopedResults({ title, current, initial, candidates }: {
     </section>
   );
 }
-export function Dashboard({ election, trustedSource, result, baseline, references, scenario, geometry,
+export function Dashboard({ election, trustedSource, result, ordinaryResult, baseline, references, scenario, geometry,
+  model = null, modelGeneratorReady = false, canonicalV3Ready = false,
+  onBeginModel = () => false, onModelAction = () => false,
+  onUndoModel = () => {}, onResetModel = () => {}, onExitModel = () => {},
   onAdjustment, onAddCandidate, onRenameCandidate, onRemoveCandidate,
   onUndo, onReset, onExport, onImport, error, message }: DashboardProps) {
   const candidates = [...election.candidates].sort((a, b) => a.ballotOrder - b.ballotOrder);
+  const modelPersistenceBlocked = !!model && !canonicalV3Ready;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -180,6 +195,10 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
   const scope = (): GeoScope | null => resolveScope(scopeChoice, selectedId, multipleIds, result);
 
   function sendAdjustment(make: (resolvedScope: GeoScope) => Adjustment | null) {
+    if (model) {
+      setActionMessage("Exit the synthetic Model Lab to change ordinary election actions. The partition is bound to the pre-model ballot history.");
+      return;
+    }
     const resolvedScope = scope();
     if (!resolvedScope) { setActionMessage("Select one or more counties first, or choose all Tennessee."); return; }
     const next = make(resolvedScope);
@@ -229,8 +248,12 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
         <main className="workspace">
           <div className="scenario-header">
             <div><div className="eyebrow">ELECTION EXPLORER <span className="eyebrow-line" /></div><h1>{election.title}</h1><p>{election.office} <span className="middle-dot">·</span> {election.year ?? "Undated"} <span className="middle-dot">·</span> Experimental scenario</p></div>
-            <span className="synthetic-pill">SYNTHETIC DATA</span>
+            <span className="synthetic-pill">{model ? "SYNTHETIC · MODEL ACTIVE" : "SYNTHETIC DATA"}</span>
           </div>
+          {model && <div className="model-map-notice" role="status">
+            <strong>Fictional cohort model active.</strong> County colors and statewide/area totals reflect engine-calculated
+            hypothetical subgroup edits, never observed voter preferences. Ordinary election edits are paused.
+          </div>}
           <section className="score-panel" aria-label="Candidate scoreboard">
             <div className="panel-caption"><span>STATEWIDE SCOREBOARD</span><span>{formatNumber(stateTotals.ballots)} total ballots · {candidates.length} candidates</span></div>
             <div className="score-grid">
@@ -309,21 +332,26 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
         <aside className="inspector" aria-label="Scenario controls">
           <div className="inspector-head"><div><span className="eyebrow">THE WORKBENCH</span><h2>Scenario controls</h2></div><span className="inspector-symbol" aria-hidden="true">⌘</span></div>
           <div className="inspector-tabs" aria-label="Control categories">
-            {(["Election", "Candidates", "Local", "Style"] as const).map((tab) =>
+            {(["Election", "Candidates", "Local", "Style", "Model Lab"] as const).map((tab) =>
               <button type="button" key={tab} onClick={() => { setActiveTab(tab); setActionMessage(""); }}
                 className={tab === activeTab ? "inspector-tab active" : "inspector-tab"} aria-current={tab === activeTab ? "page" : undefined}>{tab}</button>)}
-            <button type="button" className="inspector-tab disabled" disabled title="No overlap-safe demographic cohort model is available yet">Demographics</button>
+
           </div>
           <section className="scenario-actions" aria-label="Scenario history and JSON">
-            <h3>Scenario history <span className="count-bubble">{scenario.actions.length} action(s)</span></h3>
+            <h3>Scenario history <span className="count-bubble">{scenario.actions.length} standard · {model?.actions.length ?? 0} model action(s)</span></h3>
             <div className="scenario-buttons">
-              <button type="button" onClick={onUndo} disabled={scenario.actions.length === 0}>Undo</button>
-              <button type="button" onClick={onReset} disabled={scenario.actions.length === 0 && !hasCustomRegistry}>Reset</button>
+              <button type="button" onClick={onUndo} disabled={model ? model.actions.length === 0 : scenario.actions.length === 0}>Undo</button>
+              <button type="button" onClick={onReset} disabled={scenario.actions.length === 0 && !hasCustomRegistry && !model}>Reset</button>
             </div>
-            <p className="help-text">Portable projects retain hypothetical candidates, renames and the action log. Legacy v1 action-only imports are supported for the original registry.</p>
+            <p className="help-text">{model
+              ? "The active model uses a separate cohort action history. Reset clears the whole project; model-only reset is in Model Lab."
+              : "Portable projects retain hypothetical candidates, renames and the action log. Legacy v1 action-only imports are supported for the original registry."}</p>
+            {modelPersistenceBlocked && <p className="model-save-warning" data-testid="model-save-gate">
+              Model Save/Load DISABLED: canonical v3 persistence is not integrated. Ordinary v2 JSON would lose cohort actions. Exit Model Lab to save the ordinary project.
+            </p>}
             <label className="scenario-editor-label" htmlFor="scenario-file">Load a saved scenario project</label>
             <input id="scenario-file" className="scenario-file" type="file" accept=".json,application/json"
-              aria-label="Import scenario JSON file" onChange={async (event) => {
+              aria-label="Import scenario JSON file" disabled={modelPersistenceBlocked} onChange={async (event) => {
                 const field = event.currentTarget;
                 const file = field.files?.[0];
                 if (!file) return;
@@ -342,23 +370,23 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
                 } finally { field.value = ""; }
               }} />
             <label className="scenario-editor-label" htmlFor="scenario-json">Scenario project JSON · v2 or legacy v1</label>
-            <textarea id="scenario-json" className="scenario-json" rows={3} value={scenarioJson}
+            <textarea id="scenario-json" className="scenario-json" rows={3} value={scenarioJson} disabled={modelPersistenceBlocked}
               onChange={(event) => setScenarioJson(event.target.value)}
               placeholder="Export your project or paste a portable scenario JSON here…" />
             <div className="scenario-buttons">
-              <button type="button" onClick={() => {
+              <button type="button" disabled={modelPersistenceBlocked} onClick={() => {
                 const raw = onExport();
                 if (!raw) return;
                 setScenarioJson(raw);
                 const file = new Blob([raw], { type: "application/json" });
                 const url = URL.createObjectURL(file);
                 const anchor = document.createElement("a");
-                anchor.href = url; anchor.download = "votatlas-project.json";
+                anchor.href = url; anchor.download = model ? "votatlas-model-project-v3.json" : "votatlas-project.json";
                 document.body.appendChild(anchor); anchor.click(); anchor.remove();
                 window.setTimeout(() => URL.revokeObjectURL(url), 0);
               }}>Export JSON</button>
               <button type="button" onClick={() => { setActionMessage(""); onImport(scenarioJson); }}
-                disabled={!scenarioJson.trim()}>Import JSON</button>
+                disabled={!scenarioJson.trim() || modelPersistenceBlocked}>Import JSON</button>
             </div>
             {message && <p role="status" className="scenario-notice">{message}</p>}
             {error && <div role="alert" className="scenario-error">{error}</div>}
@@ -370,6 +398,8 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
               <p className="info-note">This is a development fixture. Historical election selection will activate when E3's verified datasets are integrated.</p>
             </div>}
             {activeTab === "Candidates" && <div className="control-section">
+              {model && <p className="model-save-warning">Candidate editing is paused during synthetic modeling. Exit Model Lab to change the underlying registry.</p>}
+              <fieldset disabled={!!model} className="model-locked-fieldset">
               <span className="eyebrow">CUSTOM CANDIDATES</span>
               <CandidateEditor election={election} trustedSource={trustedSource}
                 onAdd={onAddCandidate} onRename={onRenameCandidate} onRemove={onRemoveCandidate} />
@@ -379,8 +409,11 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
               <p className="help-text">Explicit redistribution: proportional across all other candidates. The deterministic engine checks feasibility before applying.</p>
               <button type="button" className="action-button" onClick={submitShare}>Apply SET_SHARE <span>↗</span></button>
               <p className="info-note">Candidate additions are hypothetical; all election arithmetic remains in the simulation engine.</p>
+              </fieldset>
             </div>}
             {activeTab === "Local" && <div className="control-section">
+              {model && <p className="model-save-warning">Ordinary election actions are paused while the fictional cohort model is active. Exit the model first.</p>}
+              <fieldset disabled={!!model} className="model-locked-fieldset">
               <span className="eyebrow">LOCAL ELECTION ADJUSTMENTS</span><h3>Shape a scenario</h3>
               <label htmlFor="adjustment-scope">Apply adjustment to</label><select id="adjustment-scope" value={scopeChoice}
                 onChange={(e) => setScopeChoice(e.target.value as GeographicScopeMode)}>
@@ -400,21 +433,29 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
               <label htmlFor="turnout-factor">Ballot multiplier (modeled)</label><div className="input-suffix"><input id="turnout-factor" type="number" min="0.01" max="10" step="0.01" value={turnoutFactor} onChange={(e) => setTurnoutFactor(e.target.value)} /><span>×</span></div>
               <button type="button" className="outline-button" onClick={submitTurnout}>Apply TURNOUT_SCALE <span>↗</span></button>
               <p className="help-text">Turnout allocation: proportional across candidates. The engine validates feasibility and rounds votes.</p>
+              </fieldset>
+            </div>}
+            {activeTab === "Model Lab" && <div className="control-section">
+              <ModelLab candidates={candidates} selectedIds={selectedIds} scope={scope()}
+                scopeLabel={activeAreaLabel} ordinary={ordinaryResult ?? result} model={model}
+                generatorReady={modelGeneratorReady} canonicalSaveReady={canonicalV3Ready}
+                onStart={onBeginModel} onApply={onModelAction} onUndo={onUndoModel}
+                onResetEdits={onResetModel} onExit={onExitModel}/>
             </div>}
             {activeTab === "Style" && <div className="control-section">
               <span className="eyebrow">MAP PRESENTATION</span><h3>Display settings</h3>
               <label className="checkline"><input type="checkbox" checked={showResults} onChange={(e) => setShowResults(e.target.checked)} /><span>Color counties by current leader</span></label>
               <p className="info-note">This changes only the map presentation. It never changes vote counts or adjustment history.</p>
             </div>}
-            <div className="disabled-note"><span aria-hidden="true">◇</span><div><strong>Demographics locked</strong><p>Requires overlap-safe cohort data and a verified demographic engine. No fabricated controls.</p></div></div>
+            <div className="disabled-note"><span aria-hidden="true">◇</span><div><strong>Hypothetical groups only</strong><p>Model Lab uses explicitly fictional disjoint cohorts, never measured demographic preferences or unsupported intersections.</p></div></div>
             {actionMessage && <div className="action-feedback" role="status">{actionMessage}</div>}
-            <div className="queue-state"><span>ENGINE ACTION HISTORY</span><strong>{scenario.actions.length} applied</strong><p>Each action is validated and replayed in order by the deterministic simulator.</p></div>
+            <div className="queue-state"><span>ENGINE ACTION HISTORY</span><strong>{scenario.actions.length + (model?.actions.length ?? 0)} applied</strong><p>Each action is validated and replayed in order by the deterministic simulator.</p></div>
             <UnitDetails unit={selectedUnit} baselineUnit={baselineUnit} countyName={selectedShape?.name ?? "Unknown county"} candidates={candidates} />
           </div>
           <div className="inspector-footer"><span>● SYNTHETIC SANDBOX</span><span>Simulation engine connected</span></div>
         </aside>
       </div>
-      <footer className="site-footer"><span>VOTATLAS — EVERY MAP. EVERY POSSIBILITY.</span><span>Fictional candidates · invented votes · non-geographic tiles unless boundaries are sourced · not an election forecast</span></footer>
+      <footer className="site-footer"><span>VOTATLAS — EVERY MAP. EVERY POSSIBILITY.</span><span>Fictional candidates · synthetic cohort assumptions · 2020 Census boundaries where available · NOT observed subgroup behavior or an election forecast</span></footer>
     </div>
   );
 }
