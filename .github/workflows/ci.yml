@@ -38,6 +38,7 @@ jobs:
       - name: Verify Tennessee 2024 source parser, provenance and no-go gate
         run: |
           node --test scripts/tn-2024-sos-validation.test.mjs
+          node --test scripts/tn-2024-precinct-validation.test.mjs
           node scripts/generate-tennessee-2024.mjs --check
       - name: Rebuild authentic geometry byte-for-byte from pinned Census-derived source (network)
         run: node scripts/generate-tennessee-geometry.mjs --check-source

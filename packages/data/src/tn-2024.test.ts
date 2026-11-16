@@ -12,7 +12,7 @@ describe('Tennessee 2024 historical data provenance release gate', () => {
     const provenance = getTennessee2024PresidentialProvenance();
     expect(provenance.releaseApproved).toBe(false);
     expect(provenance.dataStatus).toBe('blocked');
-    expect(provenance.sourceSha256).toBeNull();
+    expect(provenance.sourceSha256).toBe('bd4437b045f592b141bad458d179160c9e7626beb545f7da2dd107305dbb817f');
     expect(provenance.payloadSha256).toBeNull();
     expect(() => getTennessee2024PresidentialFixture()).toThrow(HistoricalElectionUnavailableError);
   });

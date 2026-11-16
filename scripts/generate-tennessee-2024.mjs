@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseCountyReport, transformCountyReport, serialize, sha256, verifySourceChecksum } from './tn-2024-sos-lib.mjs';
+import { verifySevenTicketHeader, parsePrecinctReport, reconcileCountyAndPrecinct } from './tn-2024-sos-precinct-lib.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const base=resolve(root,'packages/data/fixtures/');
 const refs=JSON.parse(readFileSync(resolve(base,'tennessee-counties-2020.json'),'utf8'));
@@ -12,7 +13,7 @@ const manifestPath=resolve(base,'tennessee-2024-provenance.json');
 const manifest=JSON.parse(readFileSync(manifestPath,'utf8'));
 const args=process.argv.slice(2);
 const option=(key)=>{const pos=args.indexOf(key);return pos<0?null:args[pos+1];};
-const source=option('--source'), textPath=option('--text');
+const source=option('--source'), textPath=option('--text'), precinctPath=option('--precinct');
 const audit=args.includes('--audit'), write=args.includes('--write'), check=args.includes('--check');
 if([audit,write,check].filter(Boolean).length!==1 || (source&&textPath)) throw new Error('Usage: --audit|--write|--check [--source official.pdf]');
 if(check && !source && !textPath) {
@@ -39,11 +40,23 @@ if(source) {
   if(!audit) throw new Error('Text extraction cannot approve release');
   reportText=readFileSync(textPath,'utf8');
 }
+verifySevenTicketHeader(reportText);
 const parsed=parseCountyReport(reportText,refs);
+if(precinctPath) {
+  if(!source) throw new Error('Precinct verification requires actual county PDF');
+  const precinctBytes=readFileSync(precinctPath);
+  verifySourceChecksum(precinctBytes,manifest.precinctSourceSha256);
+  if(precinctBytes.length!==manifest.precinctSourceBytes) throw new Error('Precinct PDF byte length differs');
+  const precinctText=execFileSync('pdftotext',['-layout',precinctPath,'-'],{encoding:'utf8',maxBuffer:32*1024*1024});
+  const result=reconcileCountyAndPrecinct(parsed,parsePrecinctReport(precinctText,refs));
+  if(result.rowSha256!==manifest.countyRowsSha256 || result.precinctCount!==manifest.precinctCount) throw new Error('County and precinct provenance digest mismatch');
+  console.log('SOURCE AUDIT: independent precinct reconciliation PASSED, precincts='+result.precinctCount);
+}
+
 const fixture=transformCountyReport(parsed);
 const rendered=serialize(fixture);
 const proposed={...manifest,sourceSha256:originalDigest,payloadSha256:sha256(rendered),sourceBytes:pdfBytes?.length??null,
-  releaseApproved:false,dataStatus:'blocked',sourceStatus:originalDigest?'authenticated-SOS-PDF-and-county-state-reconciled':'text-extract-only',
+  releaseApproved:false,dataStatus:'blocked',sourceStatus:originalDigest?'owner-supplied-PDF-hash-and-county-state-reconciled-upstream-byte-match-pending':'text-extract-only',
   reason:'RIGHTS_AND_WRITEIN_SCOPE_REVIEW_PENDING',
   audit:{counties:parsed.rows.length,sevenTicketVotes:parsed.sevenTicketVotes,byTicket:parsed.totals}};
 console.log('SOURCE AUDIT: counties='+parsed.rows.length+' sevenTicketVotes='+parsed.sevenTicketVotes+' totals='+parsed.totals.join(','));
@@ -52,7 +65,9 @@ if(audit) {
   console.log('VOTATLAS_TN2024_PROPOSED_FIXTURE_JSON='+JSON.stringify(fixture));
   console.log('VOTATLAS_TN2024_PROPOSED_MANIFEST_JSON='+JSON.stringify(proposed));
 } else if(write) {
-  if(process.env.VOTATLAS_TN2024_RIGHTS_APPROVED!=='yes' || !originalDigest) throw new Error('Rights approval and authentic PDF source mandatory');
+  if(process.env.VOTATLAS_TN2024_RIGHTS_APPROVED!=='yes' || !originalDigest || !precinctPath ||
+     manifest.sourceAuthentication?.officialByteIdentical!==true ||
+     manifest.rights?.approvalStatus!=='approved') throw new Error('NO-GO: independently byte-authenticated SOS source, precinct reconciliation and documented conductor rights approval mandatory');
   const approved={...proposed,dataStatus:'official',releaseApproved:true,reason:'7 named ticket columns only; unrecorded write-ins / undervotes excluded'};
   approved.rights={...manifest.rights,approvalStatus:'Conductor approved factual normalization without redistributing SOS PDF'};
   writeFileSync(fixturePath,rendered);
