@@ -1,0 +1,49 @@
+name: Web workbench browser smoke
+on:
+  pull_request:
+    branches: [integration, main]
+  push:
+    branches: [integration, main]
+permissions:
+  contents: read
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Detect web workbench
+        id: web
+        run: |
+          if test -f apps/web/package.json; then echo 'present=true' >> "$GITHUB_OUTPUT"; else echo 'present=false' >> "$GITHUB_OUTPUT"; fi
+      - name: Prepare pinned pnpm
+        if: steps.web.outputs.present == 'true'
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
+      - name: Install locked dependencies
+        if: steps.web.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Build web workbench
+        if: steps.web.outputs.present == 'true'
+        run: pnpm --filter @votatlas/web build
+      - name: Install headless Chromium
+        if: steps.web.outputs.present == 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run desktop and mobile smoke
+        if: steps.web.outputs.present == 'true'
+        env:
+          CI: "true"
+        run: pnpm --filter @votatlas/web test:smoke
+      - name: Save Playwright artifacts
+        if: always() && steps.web.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: votatlas-playwright
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          if-no-files-found: ignore
