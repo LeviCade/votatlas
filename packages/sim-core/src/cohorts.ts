@@ -66,6 +66,8 @@ const MAX = BigInt(Number.MAX_SAFE_INTEGER);
 const forbidden = new Set(["__proto__", "prototype", "constructor", "toString", "valueOf", "hasOwnProperty"]);
 type Cell = CohortSimulationResult["cells"][number];
 const own = (obj: object, key: string): boolean => Object.prototype.hasOwnProperty.call(obj, key);
+/** Code-unit ordering is runtime-locale independent, unlike localeCompare. */
+const lex = (a: string, b: string): number => a === b ? 0 : a < b ? -1 : 1;
 function bad(detail: string): never { throw new SimulationError("INVALID_ACTION", `Synthetic cohort: ${detail}`); }
 function invalidPartition(detail: string): never { throw new SimulationError("INVALID_BASE_UNIT", `Synthetic cohort partition: ${detail}`); }
 function safeId(v: unknown, label: string): string {
@@ -209,7 +211,7 @@ function cloneAndValidate(election: ElectionDefinition, baseline: readonly BaseU
       invalidPartition(`cohort eligible voters do not exactly sum to county universe for ${county.geoId}`);
   }
   if (countyIds.size !== original.units.length) invalidPartition("missing county or incomplete geographic partition");
-  cells.sort((a, b) => a.geoId.localeCompare(b.geoId) || a.cohortId.localeCompare(b.cohortId));
+  cells.sort((a, b) => lex(a.geoId, b.geoId) || lex(a.cohortId, b.cohortId));
   return { ids, original, cells, cohortIds: [...cohortIds].sort() };
 }
 function scopedCells(cells: readonly Cell[], action: CohortAction, cohortIds: readonly string[]): Cell[] {
