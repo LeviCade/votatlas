@@ -6,6 +6,10 @@ import { boundsForCounties } from "./choropleth";
 export interface MapCanvasProps {
   counties: PaintedCounties;
   selectedGeoId: string | null;
+  /** Highlight a set of counties without replacing each county's leader color. */
+  selectedGeoIds?: readonly string[];
+  /** Only single-county navigation should automatically fit its boundaries. */
+  focusSelected?: boolean;
   onSelect: (geoId: string) => void;
   onHover: (geoId: string | null) => void;
 }
@@ -26,9 +30,13 @@ export interface MapE2EInspection {
   rendered: boolean;
   zoom: number;
   moving: boolean;
+  selectedFilter: unknown;
 }
 interface MapE2EWindow extends Window {
-  __votatlasMapForE2E?: { inspectCounty: (geoId: string) => MapE2EInspection };
+  __votatlasMapForE2E?: {
+    inspectCounty: (geoId: string) => MapE2EInspection;
+    projectPoint: (lon: number, lat: number) => { x: number; y: number };
+  };
 }
 
 /** Standalone original map style: no remote tiles, keys, copied imagery or map data. */
@@ -42,11 +50,11 @@ const blankStyle = {
   }],
 };
 
-export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCanvasProps) {
+export function MapCanvas({ counties, selectedGeoId, selectedGeoIds, focusSelected = true, onSelect, onHover }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const latestRef = useRef({ counties, selectedGeoId, onSelect, onHover });
-  latestRef.current = { counties, selectedGeoId, onSelect, onHover };
+  const latestRef = useRef({ counties, selectedGeoId, selectedGeoIds, focusSelected, onSelect, onHover });
+  latestRef.current = { counties, selectedGeoId, selectedGeoIds, focusSelected, onSelect, onHover };
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState("");
 
@@ -101,8 +109,10 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
             id: SELECTED_LAYER,
             type: "line",
             source: SOURCE_ID,
-            filter: ["==", ["get", "geoId"], latestRef.current.selectedGeoId ?? ""],
-            paint: { "line-color": "#ffffff", "line-width": 3.5 },
+            filter: ["in", ["get", "geoId"], ["literal",
+              latestRef.current.selectedGeoIds ?? (latestRef.current.selectedGeoId ? [latestRef.current.selectedGeoId] : [])
+            ]],
+            paint: { "line-color": "#f9e4a2", "line-width": 3.5, "line-opacity": 0.96 },
           });
           map.on("click", FILL_LAYER, (event) => {
             const id = event.features?.[0]?.properties?.geoId as string | undefined;
@@ -124,6 +134,7 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
           if (new URLSearchParams(window.location.search).get("e2e") === "1") {
             const diagnosticWindow = window as MapE2EWindow;
             diagnosticWindow.__votatlasMapForE2E = {
+              projectPoint: (lon, lat) => { const p = map.project([lon, lat]); return { x: p.x, y: p.y }; },
               inspectCounty: (geoId: string): MapE2EInspection => {
                 const feature = map.querySourceFeatures(SOURCE_ID)
                   .find(f => f.properties?.geoId === geoId);
@@ -135,6 +146,7 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
                   winnerCandidateId: (feature?.properties?.winnerCandidateId as string | undefined) ?? null,
                   layerColorExpression: map.getPaintProperty(FILL_LAYER, "fill-color"),
                   rendered, zoom: map.getZoom(), moving: map.isMoving(),
+                  selectedFilter: map.getFilter(SELECTED_LAYER),
                 };
               },
             };
@@ -184,13 +196,22 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
   useEffect(() => {
     const map = mapRef.current;
     if (!map || status !== "ready") return;
-    map.setFilter(SELECTED_LAYER, ["==", ["get", "geoId"], selectedGeoId ?? ""]);
+    const highlighted = selectedGeoIds ?? (selectedGeoId ? [selectedGeoId] : []);
+    map.setFilter(SELECTED_LAYER, ["in", ["get", "geoId"], ["literal", highlighted]]);
+  }, [selectedGeoId, selectedGeoIds, status]);
+
+  // Focusing is deliberately independent of the highlighted set and vote updates.
+  // Toggling a selection, adding counties, or changing candidate support never
+  // overwrites a user's current map zoom.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready" || !focusSelected) return;
     const shape = latestRef.current.counties.features.find(feature => feature.properties.geoId === selectedGeoId);
     if (shape) {
       const bounds = boundsForCounties({ type: "FeatureCollection", features: [shape] });
       if (bounds) map.fitBounds(bounds, { padding: 70, duration: 350, maxZoom: 8 });
     }
-  }, [selectedGeoId, status]);
+  }, [selectedGeoId, focusSelected, status]);
 
   return (
     <div className="map-host" data-testid="county-map-real" aria-label="Interactive geographic county map">

@@ -8,6 +8,8 @@ import type { CountyReference } from "@votatlas/data";
 import { SchematicAtlas } from "./SchematicAtlas";
 import { CandidateEditor } from "./CandidateEditor";
 import type { CandidateAddition } from "@votatlas/sim-core";
+import { normalizedCountyIds, resolveScope, selectedCountyIds, summarizeScope } from "./geo-scope";
+import type { GeographicScopeMode, ScopeSnapshot } from "./geo-scope";
 
 type TabName = "Election" | "Candidates" | "Local" | "Style";
 const formatNumber = (value: number) => new Intl.NumberFormat("en-US").format(value);
@@ -74,6 +76,40 @@ function UnitDetails({ unit, baselineUnit, countyName, candidates }: {
     </section>
   );
 }
+
+function ScopedResults({ title, current, initial, candidates }: {
+  title: string; current: ScopeSnapshot; initial: ScopeSnapshot; candidates: readonly Candidate[];
+}) {
+  const leader = candidates.find(candidate => candidate.id === current.winnerCandidateId);
+  return (
+    <section className="scope-results" aria-label="Selected geographic area results" aria-live="polite">
+      <div className="scope-results-head">
+        <div><span className="eyebrow">SELECTED AREA · ENGINE RESULTS</span><h2>{title}</h2></div>
+        <span className="count-bubble" data-testid="scope-county-count">{current.countyCount} counties</span>
+      </div>
+      <div className="scope-kpis">
+        <div><span>Ballots in selection</span><strong data-testid="scope-ballots">{formatNumber(current.ballots)}</strong>
+          <small>{current.ballots === initial.ballots ? "unchanged" : `${current.ballots > initial.ballots ? "+" : ""}${formatNumber(current.ballots - initial.ballots)} vs baseline`}</small></div>
+        <div><span>Current leader</span><strong data-testid="scope-leader">{leader?.name ?? "Tie / none"}</strong>
+          <small data-testid="scope-margin">Margin: {formatNumber(current.marginVotes)} votes</small></div>
+        <div><span>Candidate ballots</span><strong>{formatNumber(current.candidateBallots)}</strong>
+          <small>{formatNumber(current.otherBallots)} other ballots</small></div>
+      </div>
+      <div className="scope-result-grid">
+        {candidates.map(candidate => {
+          const votes = current.votes[candidate.id] ?? 0;
+          const delta = votes - (initial.votes[candidate.id] ?? 0);
+          return <div key={candidate.id} className="scope-result-candidate">
+            <span className="scope-result-label"><i style={{ backgroundColor: candidate.color }} />{candidate.name}</span>
+            <strong data-testid={`scope-votes-${candidate.id}`}>{formatNumber(votes)}</strong>
+            <small data-testid={`scope-delta-${candidate.id}`}>{delta === 0 ? "baseline" : `${delta > 0 ? "+" : ""}${formatNumber(delta)} vs baseline`}</small>
+          </div>;
+        })}
+      </div>
+      <p className="help-text">Selected-area totals sum the simulation engine's county results. Statewide totals remain in the separate scoreboard above.</p>
+    </section>
+  );
+}
 export function Dashboard({ election, trustedSource, result, baseline, references, scenario, geometry,
   onAdjustment, onAddCandidate, onRenameCandidate, onRemoveCandidate,
   onUndo, onReset, onExport, onImport, error, message }: DashboardProps) {
@@ -82,7 +118,8 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<TabName>("Local");
-  const [scopeChoice, setScopeChoice] = useState<"county" | "state">("county");
+  const [scopeChoice, setScopeChoice] = useState<GeographicScopeMode>("county");
+  const [multipleIds, setMultipleIds] = useState<string[]>([]);
   const [fromCandidateId, setFromCandidateId] = useState(candidates[0]?.id ?? "");
   const [toCandidateId, setToCandidateId] = useState(candidates[1]?.id ?? candidates[0]?.id ?? "");
   const [points, setPoints] = useState("5");
@@ -106,6 +143,30 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
     setTargetCandidateId(id => ids.includes(id) ? id : ids[0] ?? "");
   }, [election.candidates]);
   const painted = useMemo(() => geometry ? paintCounties(geometry, result, candidates, showResults) : null, [geometry, result, election.candidates, showResults]);
+  const selectedIds = useMemo(() => selectedCountyIds(scopeChoice, selectedId, multipleIds, result),
+    [scopeChoice, selectedId, multipleIds, result.units]);
+  const highlightedIds = useMemo(() => scopeChoice === "state" ? [] : selectedIds,
+    [scopeChoice, selectedIds]);
+  const area = selectedIds.length ? summarizeScope(result, selectedIds, candidates) : null;
+  const initialArea = selectedIds.length ? summarizeScope(baseline, selectedIds, candidates) : null;
+  const areaTitle = scopeChoice === "state" ? "All loaded Tennessee counties"
+    : scopeChoice === "county" ? (references.find(ref => ref.geoId === selectedId)?.name ?? "No county selected")
+    : `${selectedIds.length} selected Tennessee counties`;
+  const activeAreaLabel = scopeChoice === "state" ? "All Tennessee · 95 counties"
+    : scopeChoice === "county" ? (references.find(ref => ref.geoId === selectedId)?.name ?? "No county selected")
+    : `${selectedIds.length} selected counties`;
+  function pickCounty(geoId: string) {
+    setSelectedId(geoId);
+    if (scopeChoice === "multi") {
+      setMultipleIds(current => current.includes(geoId)
+        ? current.filter(id => id !== geoId) : normalizedCountyIds([...current, geoId]));
+    }
+  }
+  function clearSelection() {
+    if (scopeChoice === "multi") setMultipleIds([]);
+    setSelectedId(null);
+    setActionMessage("");
+  }
   const selectedShape = references.find((ref) => ref.geoId === selectedId);
   const selectedUnit = result.units.find((unit) => unit.geoId === selectedId) ?? null;
   const baselineUnit = baseline.units.find((unit) => unit.geoId === selectedId) ?? null;
@@ -116,13 +177,11 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
   const candidateBallots = candidates.reduce((total, c) => total + (stateTotals.votes[c.id] ?? 0), 0);
   const filteredCounties = references.filter((county) =>
     (county.name + " " + county.geoId).toLowerCase().includes(search.toLowerCase().trim()));
-  const scope = (): GeoScope | null => scopeChoice === "state"
-    ? { kind: "state", stateId }
-    : selectedId ? { kind: "county", countyIds: [selectedId] } : null;
+  const scope = (): GeoScope | null => resolveScope(scopeChoice, selectedId, multipleIds, result);
 
   function sendAdjustment(make: (resolvedScope: GeoScope) => Adjustment | null) {
     const resolvedScope = scope();
-    if (!resolvedScope) { setActionMessage("Select a county first, or switch the scope to Tennessee."); return; }
+    if (!resolvedScope) { setActionMessage("Select one or more counties first, or choose all Tennessee."); return; }
     const next = make(resolvedScope);
     if (!next) return;
     setActionMessage("");
@@ -179,6 +238,33 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
             </div>
             <div className="score-foot"><span><i className="tiny-pulse" /> Live deterministic simulation · {scenario.actions.length} applied action(s)</span><span>All percentages are candidate-ballot shares</span></div>
           </section>
+          <section className="geo-scope-panel" aria-label="Geographic adjustment scope">
+            <div className="scope-heading"><div><span className="eyebrow">GEOGRAPHIC CONTROLS</span><h2>Choose an adjustment area</h2></div>
+              <span className="scope-active" data-testid="active-scope">{activeAreaLabel}</span></div>
+            <div className="geo-scope-controls">
+              <div className="geo-scope-select">
+                <label htmlFor="geographic-scope">Area scope</label>
+                <select id="geographic-scope" value={scopeChoice}
+                  onChange={event => { setScopeChoice(event.target.value as GeographicScopeMode); setActionMessage(""); }}>
+                  <option value="county">One Tennessee county</option>
+                  <option value="multi">Selected Tennessee counties</option>
+                  <option value="state">All Tennessee counties</option>
+                </select>
+              </div>
+              <div className="geo-scope-actions">
+                {scopeChoice === "multi" &&
+                  <button type="button" onClick={() =>
+                    setMultipleIds(current => normalizedCountyIds([...current, ...filteredCounties.map(county => county.geoId)]))}
+                    disabled={filteredCounties.length === 0}>Add visible counties</button>}
+                <button type="button" onClick={clearSelection} disabled={scopeChoice === "state" || (scopeChoice === "county" ? !selectedId : multipleIds.length === 0)}>Clear selection</button>
+              </div>
+            </div>
+            <p className="help-text" data-testid="selection-help">
+              {scopeChoice === "county" ? "Click a county on the real map or choose one from the searchable list. Adjustments affect only that county."
+                : scopeChoice === "multi" ? "Click map counties to toggle membership; search and toggle county buttons below. Selected counties receive one combined adjustment."
+                : "Adjustments apply to the loaded Tennessee state (all 95 counties), never to the entire United States."}
+            </p>
+          </section>
           <section className="map-panel" aria-label="County map">
             <div className="map-top">
               <div className="map-top-title"><span className="map-icon" aria-hidden="true">◈</span><span>GEOGRAPHY <strong>{geometry ? "Tennessee · real county boundaries" : "Tennessee · non-geographic 95-county atlas"}</strong></span></div>
@@ -186,24 +272,33 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
             </div>
             <div className="map-frame">
               {painted
-                ? <MapCanvas counties={painted} selectedGeoId={selectedId} onSelect={setSelectedId} onHover={setHoveredId} />
+                ? <MapCanvas counties={painted} selectedGeoId={selectedId} selectedGeoIds={highlightedIds}
+                    focusSelected={scopeChoice === "county"} onSelect={pickCounty} onHover={setHoveredId} />
                 : <SchematicAtlas references={references} result={result} candidates={candidates}
                     selectedGeoId={selectedId} showResults={showResults}
-                    onSelect={setSelectedId} onHover={setHoveredId} />}
+                    onSelect={pickCounty} onHover={setHoveredId} />}
               <div className="map-watermark" aria-hidden="true"><span>VOTATLAS / DEVELOPMENT</span><strong>TN</strong></div>
               {hoveredShape && <div className="map-hover-note" role="status">{hoveredShape.name} · FIPS {hoveredId}</div>}
               <div className="map-disclaimer">{geometry ? "US Census boundaries · synthetic vote data" : "Illustrative tiles only — not geographic boundaries"}</div>
             </div>
             <div className="legend-bar"><div className="legend-title">MAP KEY <span>Candidate with the most simulated votes in each county</span></div><div className="legend-items">{candidates.map((candidate) => <CandidateKey key={candidate.id} candidate={candidate} />)}<span className="candidate-key"><i style={{ background: "#476476" }} />Tie / no data</span></div></div>
           </section>
+          {area && initialArea
+            ? <ScopedResults title={areaTitle} current={area} initial={initialArea} candidates={candidates} />
+            : <section className="scope-results" aria-label="Selected geographic area results">
+                <h2>Choose counties to view selected-area results</h2>
+                <p className="help-text">The statewide scoreboard remains visible while no local adjustment area is selected.</p>
+              </section>}
           <section className="county-explorer">
-            <div className="explorer-heading"><div><span className="eyebrow">ACCESSIBLE GEOGRAPHY NAVIGATION</span><h2>Explore Tennessee counties</h2></div><span className="count-bubble">{references.length} counties in fixture</span></div>
+            <div className="explorer-heading"><div><span className="eyebrow">ACCESSIBLE GEOGRAPHY NAVIGATION</span><h2>{scopeChoice === "multi" ? "Build a county selection" : "Explore Tennessee counties"}</h2></div><span className="count-bubble">{references.length} counties in fixture</span></div>
             <label htmlFor="county-search">Find a county by name or FIPS code</label>
             <input id="county-search" type="search" placeholder="Search counties…" value={search} onChange={(event) => setSearch(event.target.value)} />
             <div className="county-list" aria-label="County selection list">
               {filteredCounties.map((county) => (
-                <button type="button" key={county.geoId} aria-pressed={selectedId === county.geoId}
-                  onClick={() => setSelectedId(county.geoId)} className={selectedId === county.geoId ? "county-chip selected" : "county-chip"}>
+                <button type="button" key={county.geoId}
+                  aria-pressed={scopeChoice === "multi" ? multipleIds.includes(county.geoId) : selectedId === county.geoId}
+                  onClick={() => pickCounty(county.geoId)}
+                  className={(scopeChoice === "multi" ? multipleIds.includes(county.geoId) : selectedId === county.geoId) ? "county-chip selected" : "county-chip"}>
                   {county.name} <small>{county.geoId}</small>
                 </button>
               ))}
@@ -287,7 +382,15 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
             </div>}
             {activeTab === "Local" && <div className="control-section">
               <span className="eyebrow">LOCAL ELECTION ADJUSTMENTS</span><h3>Shape a scenario</h3>
-              <label htmlFor="adjustment-scope">Apply adjustment to</label><select id="adjustment-scope" value={scopeChoice} onChange={(e) => setScopeChoice(e.target.value as "county" | "state")}><option value="county">Selected county{selectedShape ? " · " + selectedShape.name : " (choose one)"}</option><option value="state">Entire Tennessee fixture</option></select>
+              <label htmlFor="adjustment-scope">Apply adjustment to</label><select id="adjustment-scope" value={scopeChoice}
+                onChange={(e) => setScopeChoice(e.target.value as GeographicScopeMode)}>
+                <option value="county">One county{selectedShape ? " · " + selectedShape.name : " (choose one)"}</option>
+                <option value="multi">Selected counties · {multipleIds.length} chosen</option>
+                <option value="state">All Tennessee · 95 counties</option>
+              </select>
+              <p className="help-text" data-testid="active-adjustment-scope">
+                Current adjustment area: {activeAreaLabel}. Selection is kept separate from the saved action history.
+              </p>
               <div className="form-rule" /><h4>Transfer candidate support</h4>
               <label htmlFor="transfer-from">From candidate</label><select id="transfer-from" value={fromCandidateId} onChange={(e) => setFromCandidateId(e.target.value)}>{candidates.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.name}</option>)}</select>
               <label htmlFor="transfer-to">To candidate</label><select id="transfer-to" value={toCandidateId} onChange={(e) => setToCandidateId(e.target.value)}>{candidates.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.name}</option>)}</select>
