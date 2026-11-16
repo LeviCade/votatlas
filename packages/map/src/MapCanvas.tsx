@@ -6,6 +6,10 @@ import { boundsForCounties } from "./choropleth";
 export interface MapCanvasProps {
   counties: PaintedCounties;
   selectedGeoId: string | null;
+  /** Highlight a set of counties without replacing each county's leader color. */
+  selectedGeoIds?: readonly string[];
+  /** Only single-county navigation should automatically fit its boundaries. */
+  focusSelected?: boolean;
   onSelect: (geoId: string) => void;
   onHover: (geoId: string | null) => void;
 }
@@ -42,11 +46,11 @@ const blankStyle = {
   }],
 };
 
-export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCanvasProps) {
+export function MapCanvas({ counties, selectedGeoId, selectedGeoIds, focusSelected = true, onSelect, onHover }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const latestRef = useRef({ counties, selectedGeoId, onSelect, onHover });
-  latestRef.current = { counties, selectedGeoId, onSelect, onHover };
+  const latestRef = useRef({ counties, selectedGeoId, selectedGeoIds, focusSelected, onSelect, onHover });
+  latestRef.current = { counties, selectedGeoId, selectedGeoIds, focusSelected, onSelect, onHover };
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState("");
 
@@ -101,8 +105,10 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
             id: SELECTED_LAYER,
             type: "line",
             source: SOURCE_ID,
-            filter: ["==", ["get", "geoId"], latestRef.current.selectedGeoId ?? ""],
-            paint: { "line-color": "#ffffff", "line-width": 3.5 },
+            filter: ["in", ["get", "geoId"], ["literal",
+              latestRef.current.selectedGeoIds ?? (latestRef.current.selectedGeoId ? [latestRef.current.selectedGeoId] : [])
+            ]],
+            paint: { "line-color": "#f9e4a2", "line-width": 3.5, "line-opacity": 0.96 },
           });
           map.on("click", FILL_LAYER, (event) => {
             const id = event.features?.[0]?.properties?.geoId as string | undefined;
@@ -184,13 +190,15 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
   useEffect(() => {
     const map = mapRef.current;
     if (!map || status !== "ready") return;
-    map.setFilter(SELECTED_LAYER, ["==", ["get", "geoId"], selectedGeoId ?? ""]);
+    const highlighted = selectedGeoIds ?? (selectedGeoId ? [selectedGeoId] : []);
+    map.setFilter(SELECTED_LAYER, ["in", ["get", "geoId"], ["literal", highlighted]]);
+    if (!focusSelected) return;
     const shape = latestRef.current.counties.features.find(feature => feature.properties.geoId === selectedGeoId);
     if (shape) {
       const bounds = boundsForCounties({ type: "FeatureCollection", features: [shape] });
       if (bounds) map.fitBounds(bounds, { padding: 70, duration: 350, maxZoom: 8 });
     }
-  }, [selectedGeoId, status]);
+  }, [selectedGeoId, selectedGeoIds, focusSelected, status]);
 
   return (
     <div className="map-host" data-testid="county-map-real" aria-label="Interactive geographic county map">
