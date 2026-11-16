@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   Adjustment, Candidate, ElectionDefinition, GeoScope, Scenario, SimulationResult, UnitResult,
 } from "@votatlas/contracts";
@@ -6,6 +6,8 @@ import { MapCanvas, paintCounties, uniqueLeader } from "@votatlas/map";
 import type { CountyShapes } from "@votatlas/map";
 import type { CountyReference } from "@votatlas/data";
 import { SchematicAtlas } from "./SchematicAtlas";
+import { CandidateEditor } from "./CandidateEditor";
+import type { CandidateAddition } from "@votatlas/sim-core";
 
 type TabName = "Election" | "Candidates" | "Local" | "Style";
 const formatNumber = (value: number) => new Intl.NumberFormat("en-US").format(value);
@@ -17,10 +19,14 @@ export interface DashboardProps {
   election: ElectionDefinition;
   result: SimulationResult;
   baseline: SimulationResult;
+  trustedSource: ElectionDefinition;
   references: readonly CountyReference[];
   scenario: Scenario;
   geometry?: CountyShapes | null;
   onAdjustment: (action: Adjustment) => void;
+  onAddCandidate: (addition: CandidateAddition) => boolean;
+  onRenameCandidate: (candidateId: string, name: string) => boolean;
+  onRemoveCandidate: (candidateId: string) => boolean;
   onUndo: () => void;
   onReset: () => void;
   onExport: () => string;
@@ -54,7 +60,7 @@ function UnitDetails({ unit, baselineUnit, countyName, candidates }: {
   const winnerId = uniqueLeader(unit.votes, candidates.map((c) => c.id));
   return (
     <section className="unit-details" aria-live="polite" aria-label="County details">
-      <div className="unit-header"><div><span className="eyebrow">Selected county · FIPS {unit.geoId}</span><h3>{countyName}</h3></div><span className="detail-tag">{winnerId ? "Unique leader" : "Tie / no votes"}</span></div>
+      <div className="unit-header"><div><span className="eyebrow">Selected county · FIPS {unit.geoId}</span><h3>{countyName}</h3></div><span className="detail-tag" data-testid="selected-county-leader">{winnerId ? `Leading: ${candidates.find(candidate => candidate.id === winnerId)?.name ?? winnerId}` : "Tie / no votes"}</span></div>
       <div className="unit-columns"><span>Candidate ballots <b>{formatNumber(candidateBallots)}</b></span><span>Other ballots <b>{formatNumber(unit.otherBallots)}</b></span></div>
       {candidates.map((candidate) => (
         <div key={candidate.id} className="unit-row">
@@ -68,7 +74,9 @@ function UnitDetails({ unit, baselineUnit, countyName, candidates }: {
     </section>
   );
 }
-export function Dashboard({ election, result, baseline, references, scenario, geometry, onAdjustment, onUndo, onReset, onExport, onImport, error, message }: DashboardProps) {
+export function Dashboard({ election, trustedSource, result, baseline, references, scenario, geometry,
+  onAdjustment, onAddCandidate, onRenameCandidate, onRemoveCandidate,
+  onUndo, onReset, onExport, onImport, error, message }: DashboardProps) {
   const candidates = [...election.candidates].sort((a, b) => a.ballotOrder - b.ballotOrder);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -83,7 +91,20 @@ export function Dashboard({ election, result, baseline, references, scenario, ge
   const [turnoutFactor, setTurnoutFactor] = useState("1.05");
   const [showResults, setShowResults] = useState(true);
   const [actionMessage, setActionMessage] = useState("");
+  const hasCustomRegistry = election.candidates.length !== trustedSource.candidates.length ||
+    election.candidates.some(candidate => {
+      const original = trustedSource.candidates.find(c => c.id === candidate.id);
+      return !original || original.name !== candidate.name;
+    });
   const [scenarioJson, setScenarioJson] = useState("");
+  // Keep native selectors valid if a hypothetical candidate is removed or a
+  // restored scenario contains a different candidate registry.
+  useEffect(() => {
+    const ids = election.candidates.map(candidate => candidate.id);
+    setFromCandidateId(id => ids.includes(id) ? id : ids[0] ?? "");
+    setToCandidateId(id => ids.includes(id) ? id : ids[1] ?? ids[0] ?? "");
+    setTargetCandidateId(id => ids.includes(id) ? id : ids[0] ?? "");
+  }, [election.candidates]);
   const painted = useMemo(() => geometry ? paintCounties(geometry, result, candidates, showResults) : null, [geometry, result, election.candidates, showResults]);
   const selectedShape = references.find((ref) => ref.geoId === selectedId);
   const selectedUnit = result.units.find((unit) => unit.geoId === selectedId) ?? null;
@@ -202,9 +223,10 @@ export function Dashboard({ election, result, baseline, references, scenario, ge
             <h3>Scenario history <span className="count-bubble">{scenario.actions.length} action(s)</span></h3>
             <div className="scenario-buttons">
               <button type="button" onClick={onUndo} disabled={scenario.actions.length === 0}>Undo</button>
-              <button type="button" onClick={onReset} disabled={scenario.actions.length === 0}>Reset</button>
+              <button type="button" onClick={onReset} disabled={scenario.actions.length === 0 && !hasCustomRegistry}>Reset</button>
             </div>
-            <label className="scenario-editor-label" htmlFor="scenario-file">Load a saved scenario file</label>
+            <p className="help-text">Portable projects retain hypothetical candidates, renames and the action log. Legacy v1 action-only imports are supported for the original registry.</p>
+            <label className="scenario-editor-label" htmlFor="scenario-file">Load a saved scenario project</label>
             <input id="scenario-file" className="scenario-file" type="file" accept=".json,application/json"
               aria-label="Import scenario JSON file" onChange={async (event) => {
                 const field = event.currentTarget;
@@ -224,18 +246,19 @@ export function Dashboard({ election, result, baseline, references, scenario, ge
                   setActionMessage("Could not read this scenario file.");
                 } finally { field.value = ""; }
               }} />
-            <label className="scenario-editor-label" htmlFor="scenario-json">Scenario JSON · schema v1</label>
+            <label className="scenario-editor-label" htmlFor="scenario-json">Scenario project JSON · v2 or legacy v1</label>
             <textarea id="scenario-json" className="scenario-json" rows={3} value={scenarioJson}
               onChange={(event) => setScenarioJson(event.target.value)}
-              placeholder="Export an action history or paste a saved JSON scenario here…" />
+              placeholder="Export your project or paste a portable scenario JSON here…" />
             <div className="scenario-buttons">
               <button type="button" onClick={() => {
                 const raw = onExport();
+                if (!raw) return;
                 setScenarioJson(raw);
                 const file = new Blob([raw], { type: "application/json" });
                 const url = URL.createObjectURL(file);
                 const anchor = document.createElement("a");
-                anchor.href = url; anchor.download = "votatlas-scenario.json";
+                anchor.href = url; anchor.download = "votatlas-project.json";
                 document.body.appendChild(anchor); anchor.click(); anchor.remove();
                 window.setTimeout(() => URL.revokeObjectURL(url), 0);
               }}>Export JSON</button>
@@ -252,13 +275,15 @@ export function Dashboard({ election, result, baseline, references, scenario, ge
               <p className="info-note">This is a development fixture. Historical election selection will activate when E3's verified datasets are integrated.</p>
             </div>}
             {activeTab === "Candidates" && <div className="control-section">
-              <span className="eyebrow">CANDIDATE-NEUTRAL ADJUSTMENTS</span><h3>Set candidate support</h3>
-              <div className="candidate-roster">{candidates.map((candidate) => <div key={candidate.id} className="roster-row"><CandidateKey candidate={candidate} /><small>{candidate.partyLabel ?? "Unaffiliated"}</small></div>)}</div>
+              <span className="eyebrow">CUSTOM CANDIDATES</span>
+              <CandidateEditor election={election} trustedSource={trustedSource}
+                onAdd={onAddCandidate} onRename={onRenameCandidate} onRemove={onRemoveCandidate} />
+              <div className="form-rule" /><h3>Set candidate support</h3>
               <label htmlFor="target-candidate">Target candidate</label><select id="target-candidate" value={targetCandidateId} onChange={(e) => setTargetCandidateId(e.target.value)}>{candidates.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}</select>
               <label htmlFor="target-share">Target candidate-ballot share (%)</label><input id="target-share" type="number" min="0" max="100" step="0.1" value={targetShare} onChange={(e) => setTargetShare(e.target.value)} />
               <p className="help-text">Explicit redistribution: proportional across all other candidates. The deterministic engine checks feasibility before applying.</p>
               <button type="button" className="action-button" onClick={submitShare}>Apply SET_SHARE <span>↗</span></button>
-              <p className="info-note">Candidate names and ballot order come from the election definition. Roster editing requires a future contract update.</p>
+              <p className="info-note">Candidate additions are hypothetical; all election arithmetic remains in the simulation engine.</p>
             </div>}
             {activeTab === "Local" && <div className="control-section">
               <span className="eyebrow">LOCAL ELECTION ADJUSTMENTS</span><h3>Shape a scenario</h3>

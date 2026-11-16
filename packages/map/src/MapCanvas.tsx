@@ -15,6 +15,22 @@ const FILL_LAYER = "county-fill";
 const SELECTED_LAYER = "county-selected";
 const HOVER_LAYER = "county-hover";
 
+/** Browser-only diagnostic enabled by ?e2e=1, never used for vote calculations.
+ * Reads the ACTUAL MapLibre source/layer after GeoJSON setData finishes. */
+export interface MapE2EInspection {
+  geoId: string;
+  sourceFeatureCount: number;
+  fill: string | null;
+  winnerCandidateId: string | null;
+  layerColorExpression: unknown;
+  rendered: boolean;
+  zoom: number;
+  moving: boolean;
+}
+interface MapE2EWindow extends Window {
+  __votatlasMapForE2E?: { inspectCounty: (geoId: string) => MapE2EInspection };
+}
+
 /** Standalone original map style: no remote tiles, keys, copied imagery or map data. */
 const blankStyle = {
   version: 8 as const,
@@ -105,6 +121,24 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
           });
           const bounds = boundsForCounties(latestRef.current.counties);
           if (bounds) map.fitBounds(bounds, { padding: 48, duration: 0, maxZoom: 8 });
+          if (new URLSearchParams(window.location.search).get("e2e") === "1") {
+            const diagnosticWindow = window as MapE2EWindow;
+            diagnosticWindow.__votatlasMapForE2E = {
+              inspectCounty: (geoId: string): MapE2EInspection => {
+                const feature = map.querySourceFeatures(SOURCE_ID)
+                  .find(f => f.properties?.geoId === geoId);
+                const rendered = map.queryRenderedFeatures({ layers: [FILL_LAYER] })
+                  .some(f => f.properties?.geoId === geoId);
+                return {
+                  geoId, sourceFeatureCount: map.querySourceFeatures(SOURCE_ID).length,
+                  fill: (feature?.properties?.fill as string | undefined) ?? null,
+                  winnerCandidateId: (feature?.properties?.winnerCandidateId as string | undefined) ?? null,
+                  layerColorExpression: map.getPaintProperty(FILL_LAYER, "fill-color"),
+                  rendered, zoom: map.getZoom(), moving: map.isMoving(),
+                };
+              },
+            };
+          }
           if (timeout) clearTimeout(timeout);
           setStatus("ready");
         });
@@ -134,6 +168,7 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
       disposed = true;
       if (timeout) clearTimeout(timeout);
       mapRef.current = null;
+      if (typeof window !== "undefined") delete (window as MapE2EWindow).__votatlasMapForE2E;
       localMap?.remove();
     };
   }, []);

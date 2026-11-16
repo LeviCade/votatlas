@@ -46,9 +46,9 @@ test("95-county live transfer, undo, reset, JSON replay + screenshot", async ({ 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export JSON" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("votatlas-scenario.json");
-  const exported = await page.getByLabel("Scenario JSON · schema v1").inputValue();
-  expect(JSON.parse(exported).actions).toHaveLength(1);
+  expect(download.suggestedFilename()).toBe("votatlas-project.json");
+  const exported = await page.getByLabel("Scenario project JSON · v2 or legacy v1").inputValue();
+  expect(JSON.parse(exported).schemaVersion).toBe(2);
 
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
@@ -62,7 +62,7 @@ test("95-county live transfer, undo, reset, JSON replay + screenshot", async ({ 
   await page.getByLabel("Import scenario JSON file").setInputFiles({
     name: "saved-scenario.json", mimeType: "application/json", buffer: Buffer.from(exported),
   });
-  await expect(page.getByText(/Imported 1 action/)).toBeVisible();
+  await expect(page.getByText(/Imported and validated/)).toBeVisible();
   expect(await votes(page, "county-votes-aster")).toBe(afterAster);
   await page.getByRole("button", { name: "Reset", exact: true }).click();
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
@@ -79,9 +79,9 @@ test("rejected impossible transfer and malformed import do not change results", 
   await page.getByRole("button", { name: "Apply TRANSFER_PP" }).click();
   await expect(page.getByRole("alert")).toContainText("INSUFFICIENT_SUPPORT");
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
-  await page.getByLabel("Scenario JSON · schema v1").fill('{"schemaVersion":1,"electionId":"wrong","actions":[]}');
+  await page.getByLabel("Scenario project JSON · v2 or legacy v1").fill('{"schemaVersion":1,"electionId":"wrong","actions":[]}');
   await page.getByRole("button", { name: "Import JSON" }).click();
-  await expect(page.getByRole("alert")).toContainText("INVALID_SCENARIO");
+  await expect(page.getByRole("alert")).toContainText("SOURCE_MISMATCH");
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
   await expect(page.getByRole("button", { name: "Demographics" })).toBeDisabled();
 });

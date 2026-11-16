@@ -1,54 +1,89 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { Adjustment } from "@votatlas/contracts";
 import * as data from "@votatlas/data";
-import type { CountyShapes } from "@votatlas/map";
+import type { CandidateAddition } from "@votatlas/sim-core";
 import { SimulationError } from "@votatlas/sim-core";
+import type { CountyShapes } from "@votatlas/map";
 import { Dashboard } from "./Dashboard";
-import { applySandboxAction, exportSandboxScenario, importSandboxScenario, initializeSandbox, undoSandboxAction } from "./sandbox";
+import {
+  addRegistryCandidate, applyRegistryAction, initializeRegistrySandbox,
+  renameRegistryCandidate, removeRegistryCandidate, undoRegistryAction,
+  importLegacyRegistryScenario,
+} from "./sandbox";
+import type { RegistrySandboxSession } from "./sandbox";
+import { exportPortableProject, importPortableProject } from "./portable";
 
 const fixture = data.getTennesseeSyntheticFixture();
 const references = data.getTennesseeCountyReferences();
-// Engineer #3's real Census GeoJSON is being developed in parallel on a separate
-// owned branch. Detect its promised export when integration adds it, with a
-// non-geographic atlas fallback on the current base.
-type OptionalGeoJSONProvider = { getTennesseeRealCountyGeoJSON?: () => CountyShapes };
-const provider = data as typeof data & OptionalGeoJSONProvider;
-const geometry: CountyShapes | null = typeof provider.getTennesseeRealCountyGeoJSON === "function"
-  ? provider.getTennesseeRealCountyGeoJSON() : null;
+const geometry: CountyShapes = data.getTennesseeRealCountyGeoJSON();
 const errorMessage = (cause: unknown) => cause instanceof SimulationError
   ? `${cause.code}: ${cause.message}` : cause instanceof Error ? cause.message : "Could not update the sandbox.";
 
 export default function App() {
-  const baseline = useMemo(() => initializeSandbox(fixture.election, fixture.units), []);
-  const [session, setSession] = useState(baseline);
+  const [session, setSession] = useState<RegistrySandboxSession>(
+    () => initializeRegistrySandbox(fixture.election, fixture.units)
+  );
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  function apply(action: Adjustment): void {
+  /** Never commit a partially valid election/registry/scenario/result. */
+  function commit(change: () => RegistrySandboxSession, description: string): boolean {
     try {
-      const next = applySandboxAction(fixture.election, fixture.units, session, action);
-      setSession(next); setError(""); setMessage(`Applied ${action.type}. County and statewide results recalculated.`);
-    } catch (cause) { setError(errorMessage(cause)); setMessage(""); }
+      const next = change();
+      setSession(next);
+      setError("");
+      setMessage(description);
+      return true;
+    } catch (cause) {
+      setError(errorMessage(cause));
+      setMessage("");
+      return false;
+    }
   }
-  function undo(): void {
-    if (!session.scenario.actions.length) return;
-    try {
-      setSession(undoSandboxAction(fixture.election, fixture.units, session));
-      setError(""); setMessage("Undid the last action; results recalculated from the baseline.");
-    } catch (cause) { setError(errorMessage(cause)); setMessage(""); }
+
+  function apply(action: Adjustment) {
+    commit(() => applyRegistryAction(session, action),
+      `Applied ${action.type}. County and statewide results recalculated.`);
   }
-  function reset(): void {
-    setSession(baseline); setError(""); setMessage("Reset to the exact synthetic baseline across all 95 counties.");
+  function undo() {
+    if (session.scenario.actions.length === 0) return;
+    commit(() => undoRegistryAction(session), "Undid the last action; registry preserved.");
+  }
+  function reset() {
+    commit(() => initializeRegistrySandbox(fixture.election, fixture.units),
+      "Reset to the exact source registry and baseline across all 95 counties.");
+  }
+  function addCandidate(addition: CandidateAddition): boolean {
+    return commit(() => addRegistryCandidate(session, addition),
+      `Added hypothetical candidate ${addition.name} with zero baseline votes.`);
+  }
+  function renameCandidate(id: string, name: string): boolean {
+    return commit(() => renameRegistryCandidate(session, id, name),
+      `Renamed candidate ${id}; original votes are unchanged.`);
+  }
+  function removeCandidate(id: string): boolean {
+    return commit(() => removeRegistryCandidate(session, id, fixture.election),
+      `Removed unused hypothetical candidate ${id} without changing votes.`);
   }
   function load(raw: string): boolean {
-    try {
-      const next = importSandboxScenario(fixture.election, fixture.units, raw);
-      setSession(next); setError(""); setMessage(`Imported ${next.scenario.actions.length} action(s) and restored the results.`);
-      return true;
-    } catch (cause) { setError(errorMessage(cause)); setMessage(""); return false; }
+    return commit(() => importPortableProject(raw, fixture.election, fixture.units),
+      "Imported and validated the saved registry and scenario; live results restored.");
   }
-  return <Dashboard election={fixture.election} result={session.result} baseline={baseline.result}
-    references={references} geometry={geometry} scenario={session.scenario} onAdjustment={apply} onUndo={undo}
-    onReset={reset} onExport={() => exportSandboxScenario(session)} onImport={load}
-    error={error} message={message} />;
+  function exportProject(): string {
+    try {
+      const json = exportPortableProject(session, fixture.election, fixture.units);
+      setError("");
+      return json;
+    } catch (cause) {
+      setError(errorMessage(cause));
+      return "";
+    }
+  }
+
+  return <Dashboard election={session.election} trustedSource={fixture.election}
+    result={session.result} baseline={session.baseline}
+    references={references} geometry={geometry} scenario={session.scenario}
+    onAdjustment={apply} onUndo={undo} onReset={reset}
+    onAddCandidate={addCandidate} onRenameCandidate={renameCandidate} onRemoveCandidate={removeCandidate}
+    onExport={exportProject} onImport={load} error={error} message={message} />;
 }
