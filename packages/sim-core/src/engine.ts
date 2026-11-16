@@ -7,7 +7,9 @@ export type SimulationErrorCode =
   | "INVALID_ELECTION" | "INVALID_BASE_UNIT" | "INVALID_SCENARIO"
   | "INVALID_ACTION" | "UNKNOWN_CANDIDATE" | "UNKNOWN_GEO"
   | "UNSUPPORTED_SCOPE" | "INSUFFICIENT_SUPPORT"
-  | "TURNOUT_EXCEEDS_ELIGIBLE" | "INTEGER_OVERFLOW";
+  | "TURNOUT_EXCEEDS_ELIGIBLE" | "INTEGER_OVERFLOW"
+  | "INVALID_CANDIDATE" | "DUPLICATE_CANDIDATE"
+  | "RESERVED_CANDIDATE_ID" | "CANDIDATE_HAS_VOTES";
 
 /** Expected input and model failures are errors with stable, machine-readable codes. */
 export class SimulationError extends Error {
