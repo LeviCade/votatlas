@@ -39,7 +39,7 @@ test("95-county live transfer, undo, reset, JSON replay + screenshot", async ({ 
   expect(afterAster).toBeLessThan(beforeAster);
   expect(afterCedar - beforeCedar).toBe(beforeAster - afterAster);
   expect(beforeState - afterState).toBe(beforeAster - afterAster);
-  await expect(page.getByText("1 applied")).toBeVisible();
+  await expect(page.getByText("1 applied").first()).toBeVisible();
   await page.screenshot({ path: info.outputPath("votatlas-after-transfer.png"), fullPage: true });
   await info.attach("votatlas-after-transfer", { path: info.outputPath("votatlas-after-transfer.png"), contentType: "image/png" });
 
