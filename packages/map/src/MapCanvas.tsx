@@ -158,7 +158,7 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
   }, [selectedGeoId, status]);
 
   return (
-    <div className="map-host" aria-label="Interactive synthetic county map">
+    <div className="map-host" data-testid="county-map-real" aria-label="Interactive geographic county map">
       <div className="map-canvas" ref={containerRef} aria-hidden="true" />
       {status === "loading" && <div className="map-overlay" role="status">Preparing interactive county map…</div>}
       {status === "error" && (

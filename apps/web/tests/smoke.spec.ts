@@ -16,7 +16,13 @@ async function selectDavidson(page: import("@playwright/test").Page) {
 test("95-county live transfer, undo, reset, JSON replay + screenshot", async ({ page }, info) => {
   await page.goto("/");
   await expect(page.getByText("SYNTHETIC DATA")).toBeVisible();
-  await expect(page.getByTestId("county-map-tile")).toHaveCount(95);
+  const tileCount = await page.getByTestId("county-map-tile").count();
+  if (tileCount) {
+    expect(tileCount).toBe(95); // Explicit non-geographic fallback before E3 merges.
+  } else {
+    await expect(page.getByTestId("county-map-real")).toBeVisible(); // E3's real county polygons.
+    await expect(page.locator(".map-disclaimer")).toContainText("US Census");
+  }
   await expect(page.locator('[data-testid="candidate-score"]')).toHaveCount(3);
   await selectDavidson(page);
   const beforeAster = await votes(page, "county-votes-aster");
