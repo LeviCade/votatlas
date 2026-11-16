@@ -1,35 +1,34 @@
-# Votatlas map-first UI — Engineer 1
+# Votatlas — live Tennessee synthetic election sandbox (Round Two)
 
-Owned paths: `apps/web/**` and `packages/map/**`. This is an **interactive development preview**, not a simulation or official electoral dataset.
+The React workbench consumes `getTennesseeSyntheticFixture()` from `@votatlas/data` and uses `simulateElection`, `appendAction`, `undoLastAction`, `serializeScenario`, and `parseScenario` from `@votatlas/sim-core`.
 
-## Run after a workspace install
+**Every vote is fictional.** County GEOIDs and names come from the Census 2020 reference; ballots are invented and never claim to be actual election returns.
+
+## Commands (after conductor updates root pnpm-lock.yaml)
 
 ```sh
 corepack enable
-pnpm install
-pnpm --filter @votatlas/web dev
-pnpm --filter @votatlas/map typecheck
-pnpm --filter @votatlas/web typecheck
-pnpm --filter @votatlas/map test
-pnpm --filter @votatlas/web test
-pnpm --filter @votatlas/web build
+corepack prepare pnpm@9.15.9 --activate
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm --filter @votatlas/web exec playwright install --with-deps chromium
 pnpm --filter @votatlas/web test:smoke
 ```
 
-The Playwright smoke assumes a completed build and installed Chromium browser (`pnpm exec playwright install chromium`).
+Playwright emits `votatlas-live-sandbox.png` in desktop and mobile test-result directories; the GitHub `web-smoke` workflow uploads these artifacts.
 
-## Integration seams
+## Ownership and integration
 
-- `Dashboard` takes `ElectionDefinition`, `SimulationResult`, geographic `CountyShapes`, and `onAdjustment(action: Adjustment)`.
-- MapLibre is presentation only and does not run any simulated calculation. All colors use candidate IDs, not party positions.
-- E2: wire the action callback to the pure simulator; replace mock `result` from the engine, and expose action history/undo/reset/export at the integration layer.
-- E3: replace `src/fixtures/synthetic.ts` with independently licensed 95-county Tennessee geometry/results and verify GEOID matching. Current polygons are **schematic tiles**, not county shapes. Ownership of fixture source remains E3; discuss the loader contract before integrating.
-- Candidate roster edits and demographic controls are blocked by missing contracts/model support; the UI does not pretend they work.
+- E1 owns `apps/web/**`, `packages/map/**`. Conductor owns root lockfile and release integration.
+- A `SandboxSession` holds the canonical scenario and engine-generated result. Every action is appended immutably, simulated and validated before React state updates. No component computes simulated votes.
+- The UI has local/state scopes, transfer, share and turnout commands, Undo, exact Reset, JSON export/download and validated JSON import. Invalid inputs leave the prior session unchanged.
+- All 95 counties are available in the searchable keyboard-navigable list and in a labeled **NON-GEOGRAPHIC** interactive tile atlas. It does not misuse local schematic index coordinates as longitude/latitude.
+- When E3 publishes the promised `getTennesseeRealCountyGeoJSON()` export with independently sourced 95 WGS84-compatible polygons, the map presentation can switch to the existing MapLibre renderer. The optional provider is detected at runtime; no hard dependency on an unmerged E3 API.
+- The MapLibre data adapter colors by candidate ID and presents leader/tie/no-data colors, using the engine's live result.
+- Candidate editing and demographics remain explicitly disabled where modeling/contracts are incomplete; no ElectIndex code or geography is copied.
 
-No network basemap, API token, copied ElectIndex asset, or actual election results are included. The font stylesheet is an optional Google Fonts request; system-font fallbacks remain if offline.
+## Native proof requirements
 
-## Browser behavior
-
-The map uses WebGL, with a bounded failure state and an independent, keyboard-accessible county search/list. On small screens, the right dock moves beneath the map. Candidate score, legend, and local detail all read the injected `SimulationResult`. Pending actions are clearly marked as **not applied** in this preview.
-
-Playwright screenshots are written as test artifacts when the browser suite runs.
+Use the Playwright screenshots and actual job URLs, not green claims inferred from committed test code. Tests assert county-local transfer, statewide rollup changes, undo/reset, scenario export/import, invalid error paths, and 2/3/5 candidate render support.

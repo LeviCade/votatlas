@@ -146,3 +146,35 @@ h1,h2,h3,h4{font-family:"Space Grotesk",system-ui,sans-serif}
 @media(max-width:900px){.workbench{grid-template-columns:minmax(0,1fr)}.inspector{border-left:0;border-top:1px solid #2b4350}.inspector-body{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}.control-section{grid-column:1}.disabled-note,.action-feedback,.queue-state,.unit-details{grid-column:2}.disabled-note{align-self:start}.unit-details{margin-top:14px}.inspector-tabs{grid-template-columns:repeat(5,minmax(0,1fr));padding:0 15px 13px}.inspector-tab.disabled{grid-column:auto}.map-frame{height:450px}}
 @media(max-width:620px){.topbar{height:66px;padding:0 15px}.brand-mark{width:33px;height:33px}.brand strong{font-size:21px}.top-version,.meta-divider{display:none}.top-meta{gap:0}.status-pill{font-size:0;padding:10px}.status-light{margin:0}.workspace{padding:21px 13px 27px}.scenario-header{align-items:flex-start;flex-direction:column;gap:12px;margin-bottom:17px}.scenario-header h1{font-size:27px}.scenario-header p{line-height:1.5;font-size:12px}.synthetic-pill{padding:7px 9px;font-size:9px}.panel-caption{padding:13px;font-size:9px}.panel-caption span:last-child{font-size:10px}.score-grid{grid-template-columns:1fr;padding:2px 13px}.score-item{padding:13px 0;border-right:0;border-bottom:1px solid #2c3f4b}.score-item:last-child{border-bottom:0}.score-meta{margin:7px 0 9px}.score-foot{flex-direction:column;padding:10px 13px}.map-panel{margin-top:16px}.map-top{height:auto;min-height:60px;padding:12px;flex-wrap:wrap}.map-top-title{flex:1}.map-tools{margin-left:40px}.map-frame{height:365px}.map-watermark strong{font-size:85px}.map-disclaimer{font-size:9px;right:9px;bottom:9px;padding:7px;max-width:190px}.map-hover-note{font-size:10px;top:9px;left:8px}.legend-bar{padding:13px}.legend-items{gap:10px 17px}.county-explorer{padding:15px;margin-top:16px}.explorer-heading{align-items:flex-start}.explorer-heading h2{font-size:17px}.count-bubble{font-size:9px;padding:6px}.inspector-head{padding:23px 15px}.inspector-tabs{overflow-x:auto;display:flex;gap:0;padding:0 10px 13px}.inspector-tab{flex:none;padding:10px 12px}.inspector-body{display:block;padding:17px 15px 25px}.disabled-note,.unit-details,.queue-state{margin-top:22px}.site-footer{padding:12px 15px;flex-direction:column;gap:5px;line-height:1.5}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Explicitly non-geographic 95-county tile atlas until E3's licensed boundaries arrive. */
+.atlas-wrap{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;padding:42px 28px;background:radial-gradient(ellipse at center,#1c4251,#0a1d2b 76%);overflow:auto}
+.atlas-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px;width:min(100%,790px);margin:auto}
+.atlas-tile{position:relative;min-width:0;aspect-ratio:1.3;border:1px solid #a8c0cc55;border-radius:3px;color:#efffff;font-size:10px;font-weight:800;box-shadow:0 1px 4px #0003;transition:filter .12s,outline .12s}
+.atlas-tile:hover{filter:brightness(1.25);outline:1px solid #e8ffff}
+.atlas-tile.selected{outline:3px solid #fff;outline-offset:1px;z-index:2;box-shadow:0 0 20px #a2e5df70}
+.atlas-tile:focus-visible{z-index:3}
+.atlas-note{position:absolute;bottom:13px;left:16px;background:#071823e9;color:#d3eaed;font-size:11px;padding:9px 11px;border-radius:6px;border:1px solid #527483}
+.scenario-actions{padding:17px 22px;border-bottom:1px solid #2b4150;background:#102532}
+.scenario-actions h3{font-size:14px;margin:0 0 12px}
+.scenario-actions p{font-size:11px;color:#89a6b5;line-height:1.4;margin:11px 0}
+.scenario-buttons{display:flex;flex-wrap:wrap;gap:9px}
+.scenario-buttons button{flex:1;border-radius:7px;border:1px solid #547888;background:#1a3644;color:#dfedf2;padding:10px 12px;font-size:11px;font-weight:800;white-space:nowrap}
+.scenario-buttons button:disabled{opacity:.45;cursor:not-allowed}
+.scenario-buttons button:hover:not(:disabled){background:#295165}
+.scenario-json{display:block;width:100%;min-height:96px;resize:vertical;background:#0b1e2a;border:1px solid #34505e;color:#e6f5f6;border-radius:7px;padding:10px;margin-top:11px;font:11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+.scenario-editor-label{display:block;color:#a9c7d2;font-size:10px;font-weight:800;margin-top:13px}
+.scenario-notice{color:#b8ebcd!important;font-weight:700}
+.scenario-error{color:#ffd2bf;background:#492c2c;border:1px solid #a75b55;border-radius:8px;padding:12px;font-size:11px;line-height:1.5;margin-top:12px}
+.unit-row{grid-template-columns:minmax(0,1fr) auto auto;gap:9px}
+.unit-row .unit-vote-value{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.vote-delta{font-size:10px;font-weight:800;color:#bce4cd}
+.vote-delta.negative{color:#ffb9a8}
+.score-meta .state-votes{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.score-meta .state-delta{font-size:10px;color:#a1dcc1}
+.score-meta .state-delta.negative{color:#f4b4a9}
+@media(max-width:900px){.scenario-actions{padding:18px 15px}}
+@media(max-width:620px){.atlas-wrap{padding:28px 12px 36px}.atlas-grid{gap:3px}.atlas-tile{font-size:7px;border-radius:2px}.atlas-note{bottom:7px;left:8px;font-size:9px;padding:6px}.scenario-buttons button{font-size:10px;padding:10px 7px}}
+
+.scenario-file{display:block;width:100%;font-size:11px;color:#a9c6d3;margin:9px 0;padding:9px;border:1px dashed #476b7b;border-radius:7px;background:#0b1e2a}
+.scenario-file::file-selector-button{border:1px solid #578292;background:#193948;color:#e0f1f4;padding:6px 10px;border-radius:5px;margin-right:9px;cursor:pointer}
