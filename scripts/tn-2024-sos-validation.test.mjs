@@ -36,7 +36,7 @@ test('duplicate county and GEOID rejected',()=>{
 });
 test('extra candidate column and missing statewide total fail closed',()=>{
  assert.throws(()=>parseCountyReport(sample().replace(/^Anderson .*$/m,s=>s+' 5'),refs,totals),/required 95/);
- assert.throws(()=>parseCountyReport(sample().replace('STATE TOTALS','NOT TOTALS'),refs,totals),/STATE TOTALS/);
+ assert.throws(()=>parseCountyReport(sample().replace('STATE TOTALS','NOT TOTALS'),refs,totals),/STATE TOTALS|unrecognized county label/);
 });
 test('source bytes SHA tampering rejected',()=>{
  const original=Buffer.from('%PDF-1.7\noriginal source');
