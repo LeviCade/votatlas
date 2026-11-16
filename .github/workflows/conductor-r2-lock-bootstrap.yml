@@ -1,0 +1,40 @@
+name: Bootstrap Round Two pnpm lockfile (conductor)
+on:
+  push:
+    branches: ["conductor/v0.1-r2-lockfile"]
+permissions:
+  contents: write
+jobs:
+  generate-lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
+      - name: Materialize Engineer One web package for dependency resolution
+        run: |
+          set -euo pipefail
+          git fetch origin 'refs/heads/feature/v0.1-r2-e1-live-ui:refs/remotes/origin/feature/v0.1-r2-e1-live-ui'
+          git checkout origin/feature/v0.1-r2-e1-live-ui -- apps/web
+      - name: Generate pnpm lockfile with real dependency resolver
+        run: pnpm install --lockfile-only --ignore-scripts
+      - name: Commit ONLY the root lockfile
+        run: |
+          set -euo pipefail
+          git reset
+          git add pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo 'Lockfile already matches'
+          else
+            git -c user.name='Votatlas Conductor' -c user.email='147657883+LeviCade@users.noreply.github.com' commit -m 'build: update pnpm importer for Round Two UI dependencies'
+            git push origin HEAD:conductor/v0.1-r2-lockfile
+          fi
