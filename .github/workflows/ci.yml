@@ -1,0 +1,45 @@
+name: Verify workspace, fixtures and build
+
+on:
+  pull_request:
+    branches: [integration, main]
+  push:
+    branches: [integration, main, 'feature/v0.1-**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck / tests / build / provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.9 --activate
+      - name: Require reproducible workspace lockfile
+        run: |
+          test -f pnpm-lock.yaml || { echo 'ERROR: conductor must commit root pnpm-lock.yaml'; exit 1; }
+      - name: Fresh locked install
+        run: pnpm install --frozen-lockfile
+      - name: Workspace typecheck
+        run: pnpm typecheck
+      - name: Workspace unit tests
+        run: pnpm test
+      - name: Workspace build
+        run: pnpm build
+      - name: Verify deterministic fixtures and provenance
+        run: node scripts/check-fixtures.mjs
