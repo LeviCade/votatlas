@@ -143,13 +143,19 @@ export function MapCanvas({ counties, selectedGeoId, onSelect, onHover }: MapCan
     if (!map || status !== "ready") return;
     const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
     source?.setData(counties);
+    // Live votes update colors, but must NOT interrupt the user's current map zoom.
+  }, [counties, status]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready") return;
     map.setFilter(SELECTED_LAYER, ["==", ["get", "geoId"], selectedGeoId ?? ""]);
-    const shape = counties.features.find((feature) => feature.properties.geoId === selectedGeoId);
+    const shape = latestRef.current.counties.features.find(feature => feature.properties.geoId === selectedGeoId);
     if (shape) {
       const bounds = boundsForCounties({ type: "FeatureCollection", features: [shape] });
       if (bounds) map.fitBounds(bounds, { padding: 70, duration: 350, maxZoom: 8 });
     }
-  }, [counties, selectedGeoId, status]);
+  }, [selectedGeoId, status]);
 
   return (
     <div className="map-host" aria-label="Interactive synthetic county map">

@@ -1,12 +1,20 @@
 import { useMemo, useState } from "react";
 import type { Adjustment } from "@votatlas/contracts";
-import { getTennesseeCountyReferences, getTennesseeSyntheticFixture } from "@votatlas/data";
+import * as data from "@votatlas/data";
+import type { CountyShapes } from "@votatlas/map";
 import { SimulationError } from "@votatlas/sim-core";
 import { Dashboard } from "./Dashboard";
 import { applySandboxAction, exportSandboxScenario, importSandboxScenario, initializeSandbox, undoSandboxAction } from "./sandbox";
 
-const fixture = getTennesseeSyntheticFixture();
-const references = getTennesseeCountyReferences();
+const fixture = data.getTennesseeSyntheticFixture();
+const references = data.getTennesseeCountyReferences();
+// Engineer #3's real Census GeoJSON is being developed in parallel on a separate
+// owned branch. Detect its promised export when integration adds it, with a
+// non-geographic atlas fallback on the current base.
+type OptionalGeoJSONProvider = { getTennesseeRealCountyGeoJSON?: () => CountyShapes };
+const provider = data as typeof data & OptionalGeoJSONProvider;
+const geometry: CountyShapes | null = typeof provider.getTennesseeRealCountyGeoJSON === "function"
+  ? provider.getTennesseeRealCountyGeoJSON() : null;
 const errorMessage = (cause: unknown) => cause instanceof SimulationError
   ? `${cause.code}: ${cause.message}` : cause instanceof Error ? cause.message : "Could not update the sandbox.";
 
@@ -40,7 +48,7 @@ export default function App() {
     } catch (cause) { setError(errorMessage(cause)); setMessage(""); return false; }
   }
   return <Dashboard election={fixture.election} result={session.result} baseline={baseline.result}
-    references={references} scenario={session.scenario} onAdjustment={apply} onUndo={undo}
+    references={references} geometry={geometry} scenario={session.scenario} onAdjustment={apply} onUndo={undo}
     onReset={reset} onExport={() => exportSandboxScenario(session)} onImport={load}
     error={error} message={message} />;
 }
