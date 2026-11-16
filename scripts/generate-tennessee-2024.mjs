@@ -69,7 +69,7 @@ if(audit) {
      manifest.sourceAuthentication?.officialByteIdentical!==true ||
      manifest.rights?.approvalStatus!=='approved') throw new Error('NO-GO: independently byte-authenticated SOS source, precinct reconciliation and documented conductor rights approval mandatory');
   const approved={...proposed,dataStatus:'official',releaseApproved:true,reason:'7 named ticket columns only; unrecorded write-ins / undervotes excluded'};
-  approved.rights={...manifest.rights,approvalStatus:'Conductor approved factual normalization without redistributing SOS PDF'};
+  approved.rights={...manifest.rights,approvalStatus:'approved'};
   writeFileSync(fixturePath,rendered);
   writeFileSync(manifestPath,serialize(approved));
   console.log('WROTE approved 95-county official seven-ticket fixture');
