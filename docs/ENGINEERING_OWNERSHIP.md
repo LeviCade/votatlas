@@ -5,7 +5,8 @@
 **Round One branches (merged):** feature/v0.1-e1-map-ui, feature/v0.1-e2-candidate-engine, feature/v0.1-e3-data-ci.
 **Round Two branches (merged):** feature/v0.1-r2-e1-live-ui, feature/v0.1-r2-e2-core-hardening, feature/v0.1-r2-e3-real-tn-map.
 **Round Three branches (merged):** feature/v0.1-r3-e1-custom-candidates, feature/v0.1-r3-e2-portable-scenarios, feature/v0.1-r3-e3-official-tn-2024.
-**Round Four branches:** feature/v0.1-r4-e1-geo-scopes, feature/v0.1-r4-e2-demographic-core, feature/v0.1-r4-e3-official-source.
+**Round Four branches (merged): feature/v0.1-r4-e1-geo-scopes, feature/v0.1-r4-e2-demographic-core, feature/v0.1-r4-e3-official-source.
+**Round Five branches:** feature/v0.1-r5-e1-model-lab, feature/v0.1-r5-e2-cohort-projects, feature/v0.1-r5-e3-2024-authentication.
 
 ## Ownership
 - E1: apps/web/** and packages/map/**, including tests located there.
