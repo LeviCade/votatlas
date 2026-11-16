@@ -35,6 +35,8 @@ jobs:
           node scripts/check-tennessee-geometry.mjs
           node scripts/generate-tennessee-geometry.mjs --check
           node --test scripts/geometry-validation.test.mjs
+      - name: Rebuild authentic geometry byte-for-byte from pinned Census-derived source (network)
+        run: node scripts/generate-tennessee-geometry.mjs --check-source
 
   verify:
     needs: fixture-source
