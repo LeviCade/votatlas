@@ -5,7 +5,7 @@ import { applySandboxAction, emptyScenario, exportSandboxScenario, importSandbox
 
 const { election, units } = getTennesseeSyntheticFixture();
 const baseline = initializeSandbox(election, units);
-const transfer = (): Adjustment => ({ id: "davidson-five-pp", type: "TRANSFER_PP",
+const transfer = (): Extract<Adjustment, { type: "TRANSFER_PP" }> => ({ id: "davidson-five-pp", type: "TRANSFER_PP",
   scope: { kind: "county", countyIds: ["47037"] },
   fromCandidateId: "aster", toCandidateId: "cedar", points: 5 });
 
@@ -22,12 +22,12 @@ describe("95-county engine adapter", () => {
     const next = applySandboxAction(election, units, baseline, transfer());
     const before = baseline.result.units.find(unit => unit.geoId === "47037")!;
     const after = next.result.units.find(unit => unit.geoId === "47037")!;
-    const delta = before.votes.aster - after.votes.aster;
+    const delta = before.votes.aster! - after.votes.aster!;
     expect(delta).toBeGreaterThan(0);
-    expect(after.votes.cedar - before.votes.cedar).toBe(delta);
+    expect(after.votes.cedar! - before.votes.cedar!).toBe(delta);
     expect(after.votes.briar).toBe(before.votes.briar);
-    expect(next.result.byState["47"]!.votes.aster).toBe(baseline.result.byState["47"]!.votes.aster - delta);
-    expect(next.result.byState["47"]!.votes.cedar).toBe(baseline.result.byState["47"]!.votes.cedar + delta);
+    expect(next.result.byState["47"]!.votes.aster).toBe(baseline.result.byState["47"]!.votes.aster! - delta);
+    expect(next.result.byState["47"]!.votes.cedar).toBe(baseline.result.byState["47"]!.votes.cedar! + delta);
     expect(next.result.national.ballots).toBe(baseline.result.national.ballots);
     for (const row of next.result.units.filter(item => item.geoId !== "47037"))
       expect(row).toEqual(baseline.result.units.find(item => item.geoId === row.geoId));
