@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "tn-county-boundaries-2020",
+  "geographyVintage": "2020",
+  "sourcePublisher": "U.S. Census Bureau",
+  "originalSourceURL": "https://www2.census.gov/geo/tiger/TIGER2020PL/LAYER/COUNTY/2020/tl_2020_47_county20.zip",
+  "originalProduct": "2020 Census Redistricting (P.L. 94-171) TIGER/Line county20, Tennessee (STATEFP20=47)",
+  "sourceMirror": {
+    "url": "https://raw.githubusercontent.com/Tenjin25/TNRealignmentMap/030bcf3abfe92c3df5fef101d06899a9fe812fc4/VTDs/tl_2020_47_county20/tl_2020_47_county20.geojson",
+    "repository": "https://github.com/Tenjin25/TNRealignmentMap",
+    "pinnedCommit": "030bcf3abfe92c3df5fef101d06899a9fe812fc4",
+    "gitBlobSha1": "96bec1fe4d0569557b54ac5d77e7995068d76e48",
+    "note": "GeoJSON conversion mirror of U.S. Census 2020 county20 shapefile. NOT an official Census download endpoint; the upstream government ZIP is documented separately. No mirror code copied."
+  },
+  "sourceCrs": "NAD83 EPSG:4269 geographic lon/lat (retained; negligible WGS84 datum difference at county-scale visualization)",
+  "output": {
+    "path": "packages/data/fixtures/tennessee-counties-real-2020.geo.json",
+    "sha256": "5ee11ec39c9bce7116ccfb2405fae4a955e1f25c7dd9bb178e8dd24ab52e65bb",
+    "bytes": 955123,
+    "bbox": [
+      -90.310455,
+      34.98302,
+      -81.6469,
+      36.678255
+    ],
+    "vertices": 41363,
+    "multipolygons": 5,
+    "holes": 4,
+    "format": "RFC 7946-compatible GeoJSON FeatureCollection; WGS84-compatible longitude/latitude",
+    "joinKey": "feature.properties.geoId = BaseUnitResult.geoId = feature.id"
+  },
+  "processing": {
+    "script": "scripts/generate-tennessee-geometry.mjs",
+    "method": "Original Votatlas iterative Ramer-Douglas-Peucker over each closed ring, using two open chains and a Tennessee longitude cosine scale; keep original ring on collapse; no topology-specific shared-border snapping",
+    "toleranceDegrees": 0.00015,
+    "decimalPlaces": 6,
+    "sortOrder": "five-character GEOID ascending",
+    "outputFields": [
+      "id",
+      "properties.geoId",
+      "properties.name",
+      "geometry"
+    ],
+    "maxUncompressedBytes": 2000000,
+    "reproducibility": "--check verifies committed bytes offline; --check-source fetches pinned upstream mirror and requires byte-for-byte exact regeneration; --write is deliberate network-based regeneration."
+  },
+  "rights": {
+    "governmentCopyright": "U.S. federal-government-authored Census geographic data are not subject to copyright protection in the United States under 17 U.S.C. 105.",
+    "sourceAcknowledgement": "Source: U.S. Census Bureau, 2020 Census P.L. 94-171 TIGER/Line® county boundaries, Tennessee; simplified by Votatlas.",
+    "trademark": "TIGER/Line® is a registered U.S. Census Bureau mark; reference describes the source only, not Votatlas branding.",
+    "noWarranty": "Boundaries are for statistical data collection/tabulation and thematic mapping, not legal land descriptions, property rights, surveying, geocoding or precise area/perimeter computation.",
+    "datasetStatus": "Official federal geographic source, independently repackaged/approximated for visualization; NOT an election vote dataset and NOT endorsed by the Census Bureau."
+  },
+  "assurances": [
+    "95 source GEOIDs match Tennessee Census 2020 county-reference file exactly",
+    "No proprietary ElectIndex code or geography was used",
+    "All candidate ballot counts remain fictional in separate tn-synthetic-v1 fixture",
+    "Simplification may create sub-pixel border slivers or alter tiny islands; use unsimplified official Census source for analytic area/adjacency."
+  ]
+}

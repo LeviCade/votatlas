@@ -30,6 +30,11 @@ jobs:
         run: node scripts/generate-tennessee-fixture.mjs --check
       - name: Run real TypeScript validator regressions without dependencies
         run: node --experimental-strip-types --test scripts/standalone-validation.test.mjs
+      - name: Verify 95 authentic Tennessee 2020 boundaries, joins and SHA-256 (offline)
+        run: |
+          node scripts/check-tennessee-geometry.mjs
+          node scripts/generate-tennessee-geometry.mjs --check
+          node --test scripts/geometry-validation.test.mjs
 
   verify:
     needs: fixture-source
@@ -58,5 +63,7 @@ jobs:
         run: pnpm test
       - name: Workspace build
         run: pnpm build
-      - name: Verify deterministic fixtures and provenance
-        run: node scripts/check-fixtures.mjs
+      - name: Verify deterministic fixtures, real geometry and provenance
+        run: |
+          node scripts/check-fixtures.mjs
+          node scripts/check-tennessee-geometry.mjs
