@@ -4,6 +4,9 @@ import type {
 import { addCandidate, validateCandidateMetadata, validateRegistry } from "./candidate-registry.js";
 import { parseScenario, serializeScenario, simulateElection, SimulationError } from "./engine.js";
 import { sha256Hex } from "./sha256.js";
+import { simulateCohortPartition } from "./cohorts.js";
+import type { CohortAction, CohortSimulationResult, SyntheticCohortPartition } from "./cohorts.js";
+import { createSyntheticDemoModel, fictionalDemoPartitionId, FICTIONAL_COHORT_MODEL_VERSION } from "./demo-cohorts.js";
 
 /** Portable v2 contains NO replacement baseline votes. A verified source must be supplied to restore. */
 export interface ScenarioProjectV2 {
@@ -26,7 +29,36 @@ export interface ScenarioProjectV2 {
   /** The same ordered, fully normalized v1 Adjustment history. */
   scenario: Scenario;
 }
-export type ParsedScenarioProject = ScenarioProjectV2 | Scenario;
+/** Canonical v3 extends v2's source, registry, and ordered classic scenario fields. */
+export interface CohortModelProvenance {
+  kind: "synthetic";
+  modelId: string;
+  modelVersion: string;
+  seed: string;
+  description: string;
+}
+export interface ScenarioProjectV3 extends Omit<ScenarioProjectV2, "schemaVersion"> {
+  schemaVersion: 3;
+  cohort: {
+    model: CohortModelProvenance;
+    /** Must reconcile with the result AFTER ordinary scenario replay. */
+    partition: SyntheticCohortPartition;
+    /** Ordered; separate from canonical v1 classic actions. */
+    actions: CohortAction[];
+    /** Source/registry/classic-history/result fingerprint binding. */
+    boundTo: string;
+  };
+}
+export type ParsedScenarioProject = ScenarioProjectV3 | ScenarioProjectV2 | Scenario;
+export interface RestoredScenarioProjectV3 extends RestoredScenarioProject {
+  project: ScenarioProjectV3;
+  intermediate: SimulationResult;
+  cohortResult: CohortSimulationResult;
+  cohortPartition: SyntheticCohortPartition;
+  cohortActions: CohortAction[];
+  model: CohortModelProvenance;
+}
+
 export interface RestoredScenarioProject {
   election: ElectionDefinition;
   baseUnits: BaseUnitResult[];
@@ -181,12 +213,13 @@ export function parseScenarioProject(json: string): ParsedScenarioProject {
   try { value = JSON.parse(json); } catch { invalid("Malformed scenario project JSON"); }
   if (!plain(value)) invalid("Scenario project must be a JSON object");
   if (value.schemaVersion === 1) return parseScenario(json);
+  if (value.schemaVersion === 3) return validateV3Structure(value);
   return validateProjectStructure(value);
 }
 
 /** Canonically serialize v2 without altering v1's existing serializer. */
-export function serializeScenarioProject(project: ScenarioProjectV2): string {
-  return toJson(validateProjectStructure(project));
+export function serializeScenarioProject(project: ScenarioProjectV2 | ScenarioProjectV3): string {
+  return toJson(project.schemaVersion === 3 ? validateV3Structure(project) : validateProjectStructure(project));
 }
 
 function trustedSourceIdentity(sourceElection: ElectionDefinition, sourceBaseUnits: readonly BaseUnitResult[]) {
@@ -291,12 +324,23 @@ export function createScenarioProject(
 
 /** Requires the authoritative fixture to restore either v1 or v2; never trusts embedded vote rows. */
 export function restoreScenarioProject(
+  projectOrJson: ScenarioProjectV3,
+  sourceElection: ElectionDefinition,
+  sourceBaseUnits: readonly BaseUnitResult[]
+): RestoredScenarioProjectV3;
+export function restoreScenarioProject(
+  projectOrJson: string | ParsedScenarioProject,
+  sourceElection: ElectionDefinition,
+  sourceBaseUnits: readonly BaseUnitResult[]
+): RestoredScenarioProject | RestoredScenarioProjectV3;
+export function restoreScenarioProject(
   projectOrJson: string | ParsedScenarioProject,
   sourceElection: ElectionDefinition,
   sourceBaseUnits: readonly BaseUnitResult[]
 ): RestoredScenarioProject {
   const parsed = typeof projectOrJson === "string" ? parseScenarioProject(projectOrJson) :
     parseScenarioProject(toJson(projectOrJson));
+  if (parsed.schemaVersion === 3) return hydrateV3(parsed, sourceElection, sourceBaseUnits);
   if (parsed.schemaVersion === 2) return hydrateV2(parsed, sourceElection, sourceBaseUnits);
   // V1 has no digest/registry; it is usable only against the trusted supplied source.
   if (parsed.electionId !== sourceElection.id) {
@@ -306,4 +350,230 @@ export function restoreScenarioProject(
   const election = { ...sourceElection, candidates: sourceElection.candidates.map(candidate => ({ ...candidate })) };
   const result = simulateElection(election, baseUnits, parsed);
   return { election, baseUnits, scenario: parsed, result };
+}
+
+
+// ---------------------------------------------------------------------------
+// CANONICAL V3: v2 candidate registry/ordinary history, plus one bound cohort layer
+// ---------------------------------------------------------------------------
+const MAX_COHORTS = 64;
+const MAX_COHORT_COUNTIES = 4000;
+const MAX_COHORT_ACTIONS = 2500;
+const validDigest = (value: unknown): value is string =>
+  typeof value === "string" && /^sha256:[0-9a-f]{64}$/.test(value);
+const lex = (a: string, b: string): number => a === b ? 0 : a < b ? -1 : 1;
+function safeCount(raw: unknown, field: string): number {
+  if (typeof raw !== "number" || !Number.isSafeInteger(raw) || raw < 0) invalid(`Invalid nonnegative integer ${field}`);
+  return raw;
+}
+function normalizePartition(raw: unknown): SyntheticCohortPartition {
+  if (!plain(raw)) invalid("Cohort partition must be a JSON object");
+  onlyKeys(raw, ["schemaVersion", "dataStatus", "partitionId", "kind", "dimensionIds", "universe", "cohorts", "counties"], ["jointCountsSource"]);
+  if (raw.schemaVersion !== 1 || raw.dataStatus !== "synthetic" || raw.universe !== "modeled-ballots" ||
+      (raw.kind !== "single" && raw.kind !== "joint")) invalid("Unsupported cohort schema, data status, kind or universe");
+  const dimensionIds = checkedArray(raw.dimensionIds, "dimensionIds", 16)
+    .map(v => requiredString(v, "dimension ID"));
+  if (!dimensionIds.length || new Set(dimensionIds).size !== dimensionIds.length) invalid("Empty or duplicate dimensions");
+  if ((raw.kind === "single" && (dimensionIds.length !== 1 || raw.jointCountsSource !== undefined)) ||
+      (raw.kind === "joint" && (dimensionIds.length < 2 || raw.jointCountsSource !== "explicit-synthetic-cross-tabulation"))) {
+    invalid("Overlapping dimensions require one explicit synthetic joint cross-tabulation");
+  }
+  const cohortDefs = checkedArray(raw.cohorts, "cohorts", MAX_COHORTS);
+  if (!cohortDefs.length) invalid("At least one cohort is required");
+  const cohorts = cohortDefs.map(value => {
+    if (!plain(value)) invalid("Invalid cohort definition");
+    onlyKeys(value, ["id", "label", "dimensions"]);
+    if (!plain(value.dimensions) || Object.keys(value.dimensions).length !== dimensionIds.length) invalid("Incomplete cohort dimension tuple");
+    const dimensions = Object.fromEntries(dimensionIds.map(dim => [dim,
+      requiredString((value.dimensions as Record<string, unknown>)[dim], `cohort dimension ${dim}`)
+    ])) as Record<string, string>;
+    return { id: requiredString(value.id, "cohort ID"), label: requiredString(value.label, "cohort label"), dimensions };
+  });
+  if (new Set(cohorts.map(c => c.id)).size !== cohorts.length ||
+      new Set(cohorts.map(c => JSON.stringify(dimensionIds.map(dim => c.dimensions[dim])))).size !== cohorts.length) {
+    invalid("Duplicate cohort ID or overlapping demographic tuple");
+  }
+  const countyDefs = checkedArray(raw.counties, "cohort counties", MAX_COHORT_COUNTIES);
+  if (!countyDefs.length) invalid("Cohort partition requires county rows");
+  const counties = countyDefs.map(value => {
+    if (!plain(value)) invalid("Invalid cohort county");
+    onlyKeys(value, ["geoId", "cells"]);
+    const geoId = requiredString(value.geoId, "cohort county GEOID");
+    const cells = checkedArray(value.cells, "cohort cells", MAX_COHORTS).map(cell => {
+      if (!plain(cell)) invalid("Invalid cohort cell");
+      onlyKeys(cell, ["cohortId", "eligibleVoters", "votes", "otherBallots"]);
+      if (!plain(cell.votes)) invalid("Cohort cell votes must be an object");
+      const votes = Object.fromEntries(Object.keys(cell.votes).sort(lex).map(id => [
+        requiredString(id, "candidate ID"), safeCount((cell.votes as Record<string, unknown>)[id], `votes.${id}`)
+      ])) as Record<string, number>;
+      return {
+        cohortId: requiredString(cell.cohortId, "cohort cell ID"),
+        eligibleVoters: cell.eligibleVoters === null ? null : safeCount(cell.eligibleVoters, "eligibleVoters"),
+        votes, otherBallots: safeCount(cell.otherBallots, "otherBallots")
+      };
+    }).sort((a, b) => lex(a.cohortId, b.cohortId));
+    if (cells.length !== cohorts.length || new Set(cells.map(c => c.cohortId)).size !== cells.length ||
+        cells.some(c => !cohorts.some(g => g.id === c.cohortId))) invalid(`Incomplete or duplicate cohort cells in ${geoId}`);
+    return { geoId, cells };
+  }).sort((a, b) => lex(a.geoId, b.geoId));
+  if (new Set(counties.map(c => c.geoId)).size !== counties.length) invalid("Duplicate cohort county GEOID");
+  const result: SyntheticCohortPartition = {
+    schemaVersion: 1, dataStatus: "synthetic", partitionId: requiredString(raw.partitionId, "partition ID"),
+    kind: raw.kind, dimensionIds, universe: "modeled-ballots",
+    cohorts: cohorts.sort((a, b) => lex(a.id, b.id)), counties
+  };
+  if (raw.kind === "joint") result.jointCountsSource = "explicit-synthetic-cross-tabulation";
+  return result;
+}
+function normalizeCohortScope(raw: unknown): CohortAction["scope"] {
+  if (!plain(raw)) invalid("Cohort action scope is invalid");
+  switch (raw.kind) {
+    case "national": onlyKeys(raw, ["kind"]); return { kind: "national" };
+    case "state": onlyKeys(raw, ["kind", "stateId"]);
+      return { kind: "state", stateId: requiredString(raw.stateId, "state ID") };
+    case "county": {
+      onlyKeys(raw, ["kind", "countyIds"]);
+      const countyIds = checkedArray(raw.countyIds, "scope.countyIds", MAX_COHORT_COUNTIES)
+        .map(id => requiredString(id, "county ID"));
+      if (!countyIds.length || new Set(countyIds).size !== countyIds.length) invalid("Invalid county scope");
+      return { kind: "county", countyIds: countyIds.sort(lex) };
+    }
+    case "district": case "precinct":
+      throw new SimulationError("UNSUPPORTED_SCOPE", "Cohort project needs county atoms; district/precinct unsupported");
+    default: invalid("Unsupported cohort action scope");
+  }
+}
+function normalizeCohortActions(raw: unknown): CohortAction[] {
+  const actions = checkedArray(raw, "cohort.actions", MAX_COHORT_ACTIONS);
+  const ids = new Set<string>();
+  return actions.map(value => {
+    if (!plain(value)) invalid("Invalid cohort action");
+    const id = requiredString(value.id, "cohort action ID");
+    if (ids.has(id)) invalid(`Duplicate cohort action ID ${id}`);
+    ids.add(id);
+    const scope = normalizeCohortScope(value.scope);
+    const cohortIds = checkedArray(value.cohortIds, "cohortIds", MAX_COHORTS)
+      .map(x => requiredString(x, "cohort action selection"));
+    if (new Set(cohortIds).size !== cohortIds.length) invalid("Duplicate cohort selection");
+    cohortIds.sort(lex);
+    if (value.type === "COHORT_TRANSFER_PP") {
+      onlyKeys(value, ["type", "id", "scope", "cohortIds", "fromCandidateId", "toCandidateId", "points"]);
+      if (typeof value.points !== "number" || !Number.isFinite(value.points) || value.points < 0 || value.points > 100) {
+        invalid("Cohort transfer percentage must be from 0 to 100");
+      }
+      const fromCandidateId = requiredString(value.fromCandidateId, "donor candidate");
+      const toCandidateId = requiredString(value.toCandidateId, "recipient candidate");
+      if (fromCandidateId === toCandidateId) invalid("Cohort transfer requires distinct candidates");
+      return { type: "COHORT_TRANSFER_PP" as const, id, scope, cohortIds,
+        fromCandidateId, toCandidateId, points: value.points };
+    }
+    if (value.type === "COHORT_TURNOUT_SCALE") {
+      onlyKeys(value, ["type", "id", "scope", "cohortIds", "factor"]);
+      if (typeof value.factor !== "number" || !Number.isFinite(value.factor) || value.factor < 0) invalid("Cohort turnout factor must be finite and nonnegative");
+      return { type: "COHORT_TURNOUT_SCALE" as const, id, scope, cohortIds, factor: value.factor };
+    }
+    invalid("Unsupported cohort action type");
+  });
+}
+function normalizeModel(raw: unknown): CohortModelProvenance {
+  if (!plain(raw)) invalid("Missing synthetic model provenance");
+  onlyKeys(raw, ["kind", "modelId", "modelVersion", "seed", "description"]);
+  if (raw.kind !== "synthetic") invalid("Historical/observed demographic models are prohibited");
+  return {
+    kind: "synthetic",
+    modelId: requiredString(raw.modelId, "model ID"),
+    modelVersion: requiredString(raw.modelVersion, "model version"),
+    seed: requiredString(raw.seed, "model seed"),
+    description: requiredString(raw.description, "model description")
+  };
+}
+function validateV3Structure(raw: unknown): ScenarioProjectV3 {
+  if (!plain(raw)) invalid("V3 project must be an object");
+  if (raw.schemaVersion !== 3) throw new SimulationError("UNSUPPORTED_PROJECT_VERSION", "Project v3 required");
+  onlyKeys(raw, ["schemaVersion", "format", "source", "registry", "scenario", "cohort"]);
+  const v2 = validateProjectStructure({
+    schemaVersion: 2, format: raw.format, source: raw.source, registry: raw.registry, scenario: raw.scenario
+  });
+  if (v2.source.dataStatus !== "synthetic") invalid("Cohort projects require synthetic source data");
+  if (!plain(raw.cohort)) invalid("Missing cohort project layer");
+  onlyKeys(raw.cohort, ["model", "partition", "actions", "boundTo"]);
+  const boundTo = raw.cohort.boundTo;
+  if (!validDigest(boundTo)) invalid("Invalid cohort ordinary-history binding digest");
+  return {
+    ...v2, schemaVersion: 3,
+    cohort: {
+      model: normalizeModel(raw.cohort.model),
+      partition: normalizePartition(raw.cohort.partition),
+      actions: normalizeCohortActions(raw.cohort.actions),
+      boundTo
+    }
+  };
+}
+function cohortBinding(v2: ScenarioProjectV2, election: ElectionDefinition, intermediate: SimulationResult): string {
+  const baseDigest = fingerprintSourceElection(election, intermediate.units);
+  // Includes source identity, full v2 registry and action order, even when two
+  // different ordered logs happen to produce the same intermediate vote totals.
+  return `sha256:${sha256Hex(JSON.stringify({ project: serializeScenarioProject(v2), intermediate: baseDigest }))}`;
+}
+function hydrateV3(
+  project: ScenarioProjectV3,
+  sourceElection: ElectionDefinition,
+  sourceBaseUnits: readonly BaseUnitResult[]
+): RestoredScenarioProjectV3 {
+  const v2: ScenarioProjectV2 = {
+    schemaVersion: 2, format: FORMAT, source: project.source, registry: project.registry, scenario: project.scenario
+  };
+  const hydrated = hydrateV2(v2, sourceElection, sourceBaseUnits);
+  const binding = cohortBinding(v2, hydrated.election, hydrated.result);
+  if (project.cohort.boundTo !== binding) {
+    throw new SimulationError("SOURCE_MISMATCH", "Cohort partition is stale: source, candidate registry or ordered classic history changed. Rebuild it explicitly.");
+  }
+  if (project.cohort.model.modelId === "fictional-cohort-demo" &&
+      (project.cohort.model.modelVersion !== FICTIONAL_COHORT_MODEL_VERSION ||
+       project.cohort.partition.partitionId !== fictionalDemoPartitionId(project.cohort.model.seed))) {
+    invalid("Fictional demo seed/version and saved partition do not match");
+  }
+  const cohortResult = simulateCohortPartition(hydrated.election, hydrated.result.units,
+    project.cohort.partition, project.cohort.actions);
+  return {
+    ...hydrated, project, intermediate: hydrated.result, result: cohortResult.result, cohortResult,
+    cohortPartition: structuredClone(project.cohort.partition),
+    cohortActions: structuredClone(project.cohort.actions), model: { ...project.cohort.model }
+  };
+}
+
+/**
+ * Create the *one* canonical v3 project. The trusted source never contains invented
+ * demographic rows; partition cells are explicit, validated synthetic modeled state.
+ * Standard adjustments always execute before cohort edits.
+ */
+export function createScenarioProjectV3(
+  sourceElection: ElectionDefinition,
+  sourceBaseUnits: readonly BaseUnitResult[],
+  election: ElectionDefinition,
+  baseUnits: readonly BaseUnitResult[],
+  scenario: Scenario,
+  cohortPartition: SyntheticCohortPartition,
+  cohortActions: readonly CohortAction[],
+  model?: CohortModelProvenance
+): ScenarioProjectV3 {
+  if (!model && cohortPartition.partitionId !== fictionalDemoPartitionId(createSyntheticDemoModel().seed)) {
+    invalid("Non-default synthetic partitions must supply explicit model provenance, including seed and version");
+  }
+  const provenance = model ?? createSyntheticDemoModel();
+  if (provenance.modelId === "fictional-cohort-demo" &&
+      cohortPartition.partitionId !== fictionalDemoPartitionId(provenance.seed)) {
+    invalid("Fictional model seed/version does not match the cohort partition identifier");
+  }
+  const v2 = createScenarioProject(sourceElection, sourceBaseUnits, election, baseUnits, scenario);
+  const intermediate = hydrateV2(v2, sourceElection, sourceBaseUnits);
+  const candidate = validateV3Structure({
+    ...v2, schemaVersion: 3,
+    cohort: { model: provenance, partition: cohortPartition, actions: cohortActions,
+      boundTo: cohortBinding(v2, intermediate.election, intermediate.result) }
+  });
+  // Validate all modeled ballots, capacities, replay and bundle size before returning.
+  toJson(candidate);
+  hydrateV3(candidate, sourceElection, sourceBaseUnits);
+  return candidate;
 }

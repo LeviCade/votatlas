@@ -163,3 +163,102 @@ Rules and guarantees:
 - Scope: national, state, and county. District/precinct are expressly unsupported until a disjoint atomic crosswalk is available. Identical inputs and action order produce byte-identical results; cells are sorted by county GEOID and cohort ID, candidates by ID; ties use that same stable ordering. State/nation totals are *never* independently rounded, but computed by the existing simulator from final county rows.
 - Output is always labeled `dataStatus: "synthetic"`, with `universe: "modeled-ballots"` and `transferDenominator: "selected-cohort-candidate-ballots"`. The current implementation rejects elections not marked `synthetic`, preventing accidental presentation of fabricated demographic breakdowns as observed historic voter preferences.
 - Actions are applied in input order, without canonicalizing non-commutative operations. For undo/reset discard actions and replay from the unchanged baseline. Long seeded action histories, four candidate counts, impossible transfers, zero cells, overlaps, permutation neutrality, voter universe consistency and 95-county identity are covered in Vitest.
+
+## Round Five — canonical v3 cohort scenario projects (experimental, synthetic only)
+
+**One canonical codec:** The existing `serializeScenarioProject`, `parseScenarioProject`,
+`restoreScenarioProject` now accept v3 projects **without changing their v1/v2 behavior**.
+There is no alternate browser codec. `createScenarioProjectV3` creates the new version;
+`createScenarioProject` still exports v2. The existing `parseScenario`/
+`serializeScenario` functions remain v1-only.
+
+```ts
+import {
+  createScenarioProjectV3, createSyntheticDemoPartition, createSyntheticDemoModel,
+  restoreScenarioProject, serializeScenarioProject, simulateElection
+} from "@votatlas/sim-core";
+
+// sourceElection/sourceUnits: immutable ORIGINAL trusted E3 fixture, before edits.
+// workingElection/workingUnits: possible zero-vote custom candidate registry extension.
+// scenario: existing ordered v1 ordinary actions (including frozen historical donors).
+const ordinary = simulateElection(workingElection, workingUnits, scenario);
+const seed = "my-reproducible-fictional-seed";
+const partition = createSyntheticDemoPartition(workingElection, ordinary.units, seed);
+const model = createSyntheticDemoModel(seed);
+const cohortActions = [
+  { type: "COHORT_TRANSFER_PP" as const, id: "demo-1",
+    scope: { kind: "county" as const, countyIds: ["47037"] },
+    cohortIds: ["fictional-age-18-34"],
+    fromCandidateId: "aster", toCandidateId: "cedar", points: 2 }
+];
+const v3 = createScenarioProjectV3(
+  sourceElection, sourceUnits, workingElection, workingUnits,
+  scenario, partition, cohortActions, model
+);
+const fileContents = serializeScenarioProject(v3);
+const imported = restoreScenarioProject(fileContents, sourceElection, sourceUnits);
+if ("cohortResult" in imported) {
+  // imported.result is the FINAL county/state/nation result after BOTH layers.
+  // imported.intermediate is after classic actions, before cohort actions.
+  // imported.cohortPartition, cohortActions, model are available for the UI.
+}
+```
+
+**Exact ordering:** original trusted source → v2 candidate registry additions/metadata
+→ **all ordinary v1 actions in order** → verify the synthetic cohort partition
+reconciles **exactly** to the resulting atomic county votes and eligible universe
+→ **all cohort actions in order** → county/state/nation aggregation. V3 stores the
+canonical v2 `source`, `registry`, `scenario` sections unchanged and adds:
+
+```ts
+{
+  schemaVersion: 3,
+  format: "votatlas-scenario-project",
+  source: { electionId, geographyVintage, dataStatus: "synthetic", digest },
+  registry: { additions, overrides, candidateOrder },
+  scenario: { schemaVersion: 1, electionId, actions: ordinaryActions },
+  cohort: {
+    model: { kind: "synthetic", modelId, modelVersion, seed, description },
+    partition: { schemaVersion: 1, dataStatus: "synthetic", partitionId,
+      kind, dimensionIds, universe: "modeled-ballots", cohorts, counties },
+    actions: orderedCohortActions,
+    boundTo: "sha256:<digest of source, roster, ordinary actions and their result>"
+  }
+}
+```
+
+**No silent drift:** the `boundTo` digest includes the entire canonical v2 source,
+registry, **ordered classic history**, and its computed intermediate baseline.
+Changing a classic action, candidate metadata or trusted source causes a typed
+`SOURCE_MISMATCH`, **even if an added action produces no numeric change**. Rebuild
+an edited partition explicitly from the new post-classic result and recreate v3;
+do not keep stale modeled group counts. Undo of a cohort action is pure: remove
+its last entry and recreate the project. If ordinary history is undone, rebuild
+its synthetic partition explicitly. Never add cohort actions to canonical v1
+`scenario.actions` or use v2 exports for active demographic changes.
+
+**Synthetic demonstration:** `createSyntheticDemoPartition()` invents three
+mutually exclusive age-*like* bins (all visibly labeled `FICTIONAL`); a stable
+SHA-256-derived seeded weight allocation divides each candidate vote category,
+`otherBallots`, and any known eligible-voter remainder. Counts reconcile exactly
+to the provided post-classic county rows. It **does not measure or infer** actual
+voters' age or political preferences. The default seed is
+`votatlas-demo-2026-01` with model version `1`. For custom seeds, pass the
+matching `createSyntheticDemoModel(seed)` provenance to project creation;
+the saved model seed is checked against the partition ID on import.
+
+**Trust and validation:** Projects do not embed or replace the source election
+baseline. Import requires caller-supplied authoritative source and verifies its
+SHA-256 source fingerprint, source ID, geography vintage, data status, candidate
+registry, disjoint dimensions and all county/cohort sums. Malformed numbers,
+unknown/future versions, duplicate IDs, unknown counties, overlaps, impossible
+donor/turnout demands, unsafe keys and excessive payloads fail as typed errors.
+Synthetic-only cohort support never rebrands estimates as observations. A
+`national` scope means **the loaded election's counties only**, not all US states.
+District and precinct modeling remains unavailable without valid crosswalks.
+
+**Compatibility:** v1 action-only JSON and v2 portable candidate-registry JSON
+continue to restore unchanged. V3 exposes `RestoredScenarioProjectV3` with
+`result` (final modeled), `intermediate` (post-classic), `cohortResult`,
+`cohortPartition`, `cohortActions` and `model`. Max JSON size is 1 MiB, preserving
+the existing shared cap. Integration with E1's geographic UI is a separate PR.
