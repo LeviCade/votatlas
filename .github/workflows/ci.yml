@@ -28,6 +28,8 @@ jobs:
           node-version: '22'
       - name: Verify deterministic source, 95 county GEOIDs and manifest digest
         run: node scripts/generate-tennessee-fixture.mjs --check
+      - name: Run real TypeScript validator regressions without dependencies
+        run: node --experimental-strip-types --test scripts/standalone-validation.test.mjs
 
   verify:
     needs: fixture-source
