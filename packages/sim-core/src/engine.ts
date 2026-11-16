@@ -9,7 +9,9 @@ export type SimulationErrorCode =
   | "UNSUPPORTED_SCOPE" | "INSUFFICIENT_SUPPORT"
   | "TURNOUT_EXCEEDS_ELIGIBLE" | "INTEGER_OVERFLOW"
   | "INVALID_CANDIDATE" | "DUPLICATE_CANDIDATE"
-  | "RESERVED_CANDIDATE_ID" | "CANDIDATE_HAS_VOTES";
+  | "RESERVED_CANDIDATE_ID" | "CANDIDATE_HAS_VOTES"
+  | "CANDIDATE_IN_ACTIVE_HISTORY" | "INVALID_PROJECT" | "SOURCE_MISMATCH"
+  | "UNSUPPORTED_PROJECT_VERSION" | "PROJECT_TOO_LARGE";
 
 /** Expected input and model failures are errors with stable, machine-readable codes. */
 export class SimulationError extends Error {
