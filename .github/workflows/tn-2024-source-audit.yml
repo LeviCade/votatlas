@@ -1,0 +1,31 @@
+name: Tennessee 2024 SOS source audit (no public release)
+on:
+  push:
+    branches: [feature/v0.1-r3-e3-official-tn-2024]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install PDF extractor
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y poppler-utils
+      - name: Download original Tennessee Secretary of State PDF
+        run: |
+          curl -fL --show-error --silent --retry 3 --retry-delay 3 \
+            'https://sos-prod.tnsosgovfiles.com/s3fs-public/document/20241105GeneralbyCounty.pdf' \
+            -o /tmp/tn2024.pdf
+          head -c 5 /tmp/tn2024.pdf | grep -q '%PDF-'
+          sha256sum /tmp/tn2024.pdf
+      - name: Run 95-county parsing, independent by-office reconciliation and SHA report
+        run: |
+          node --test scripts/tn-2024-sos-validation.test.mjs
+          node scripts/generate-tennessee-2024.mjs --audit --source /tmp/tn2024.pdf
