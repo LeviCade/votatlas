@@ -123,3 +123,43 @@ pnpm -r --if-present typecheck
 pnpm -r --if-present test
 pnpm -r --if-present build
 ```
+
+## Round Four — experimental synthetic cohort mathematics (NOT observed demographic data)
+
+`simulateCohortPartition(election, trustedCountyBaseline, partition, orderedActions)` is a **separate pure opt-in layer**. It does not change `simulateElection`, the immutable v1 `Adjustment`/`Scenario` format, or the source-fingerprinted v2 `ScenarioProject` codec. **Cohort actions are not persisted by v1 or v2 exports.** Any future UI slider/editor must explicitly own its experimental cohort state and show the *synthetic modeled* label. Do not use the output as an official demographic voting observation or forecast.
+
+```ts
+import { simulateCohortPartition } from "@votatlas/sim-core";
+import type { SyntheticCohortPartition, CohortAction } from "@votatlas/sim-core";
+
+const partition: SyntheticCohortPartition = {
+  schemaVersion: 1, dataStatus: "synthetic", partitionId: "fictional-split-v1",
+  universe: "modeled-ballots", kind: "single", dimensionIds: ["fictional-age"],
+  cohorts: [
+    { id: "group-a", label: "Fictional A", dimensions: { "fictional-age": "a" } },
+    { id: "group-b", label: "Fictional B", dimensions: { "fictional-age": "b" } }
+  ],
+  counties: [
+    // A complete cell for every cohort in EVERY county in the trusted fixture.
+    // Each cell: { cohortId, eligibleVoters, votes: { [candidateId]: integer }, otherBallots }
+  ]
+};
+const edits: CohortAction[] = [{
+  type: "COHORT_TRANSFER_PP", id: "example", scope: { kind: "county", countyIds: ["47037"] },
+  cohortIds: ["group-a"], fromCandidateId: "aster", toCandidateId: "cedar", points: 3
+}];
+const modeled = simulateCohortPartition(election, originalBaseline, partition, edits);
+// modeled.baseUnits: candidate-neutral county rows suitable for the original simulator
+// modeled.result: original simulator's county/state/nation aggregates
+// modeled.cells / modeled.deltas: sorted per-county-per-cohort audit counts
+```
+
+Rules and guarantees:
+
+- Exactly **one mutually exclusive partition** of the modeled ballot universe is supplied per evaluation. One single-dimension marginal is accepted; intersections of 2+ dimensions require `kind: "joint"`, `jointCountsSource: "explicit-synthetic-cross-tabulation"`, complete dimension tuples, and individually provided joint cell counts. Independently supplied age/income/race marginal datasets are **not** composited or multiplied into overlapping populations. The model cannot externally certify a caller's declared synthetic joint cells; it verifies disjoint unique tuple identities and complete, exact numeric reconciliation.
+- Every cohort must be present once in every known county, including zero-vote cells. Each cell's candidate votes and explicit `otherBallots` sum exactly to the original **trusted** county baseline, including `eligibleVoters` when supplied. Missing/extra counties/candidates, duplicate IDs, incomplete joint tuples, inconsistent counts and unsafe numeric inputs fail before actions run. Existing input objects are never mutated.
+- `COHORT_TRANSFER_PP` moves integer support from a **named donor candidate** to another candidate inside selected disjoint cohort cells. `points` means percentage points of **candidate ballots of selected cohorts** in the scope, *excluding* `otherBallots`; donor capacity is checked before any edits. Cell ballots, other ballots, and unselected cells remain unchanged.
+- `COHORT_TURNOUT_SCALE` multiplies **total modeled cell ballots** (candidate votes plus explicit `otherBallots`), half-up rounds to whole votes, then deterministically allocates categories by Hamilton largest remainder (candidate-ID order, other ballots last). A zero-turnout cohort remains zero for all positive factors. Cohort and county eligibility ceilings are enforced; turnout alone is allowed to change total ballots.
+- Scope: national, state, and county. District/precinct are expressly unsupported until a disjoint atomic crosswalk is available. Identical inputs and action order produce byte-identical results; cells are sorted by county GEOID and cohort ID, candidates by ID; ties use that same stable ordering. State/nation totals are *never* independently rounded, but computed by the existing simulator from final county rows.
+- Output is always labeled `dataStatus: "synthetic"`, with `universe: "modeled-ballots"` and `transferDenominator: "selected-cohort-candidate-ballots"`. The current implementation rejects elections not marked `synthetic`, preventing accidental presentation of fabricated demographic breakdowns as observed historic voter preferences.
+- Actions are applied in input order, without canonicalizing non-commutative operations. For undo/reset discard actions and replay from the unchanged baseline. Long seeded action histories, four candidate counts, impossible transfers, zero cells, overlaps, permutation neutrality, voter universe consistency and 95-county identity are covered in Vitest.

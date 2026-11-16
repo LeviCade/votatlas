@@ -11,3 +11,6 @@ export type {
   Adjustment, BaseUnitResult, Candidate, CandidateId, DataStatus, ElectionDefinition,
   GeoId, GeoScope, Redistribution, ResultTotals, Scenario, SimulationResult, UnitResult
 } from "@votatlas/contracts";
+export { simulateCohortPartition } from "./cohorts.js";
+export type { CohortAction, CohortCell, CohortCounty, CohortCellDelta, CohortDefinition,
+  CohortSimulationResult, SyntheticCohortPartition } from "./cohorts.js";
