@@ -7,10 +7,10 @@ const votes = async (page: import("@playwright/test").Page, id: string): Promise
 async function selectDavidson(page: import("@playwright/test").Page) {
   const input = page.getByRole("searchbox", { name: "Find a county by name or FIPS code" });
   await input.fill("Davidson");
-  const county = page.getByRole("button", { name: /Davidson 47037/ });
+  const county = page.getByRole("button", { name: /Davidson County 47037/ });
   await county.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "Davidson" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Davidson County" })).toBeVisible();
 }
 
 test("95-county live transfer, undo, reset, JSON replay + screenshot", async ({ page }, info) => {

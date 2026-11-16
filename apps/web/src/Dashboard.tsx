@@ -170,7 +170,7 @@ export function Dashboard({ election, result, baseline, references, scenario, ge
                     selectedGeoId={selectedId} showResults={showResults}
                     onSelect={setSelectedId} onHover={setHoveredId} />}
               <div className="map-watermark" aria-hidden="true"><span>VOTATLAS / DEVELOPMENT</span><strong>TN</strong></div>
-              {hoveredShape && <div className="map-hover-note" role="status">{hoveredShape.name} County · FIPS {hoveredId}</div>}
+              {hoveredShape && <div className="map-hover-note" role="status">{hoveredShape.name} · FIPS {hoveredId}</div>}
               <div className="map-disclaimer">{geometry ? "US Census boundaries · synthetic vote data" : "Illustrative tiles only — not geographic boundaries"}</div>
             </div>
             <div className="legend-bar"><div className="legend-title">MAP KEY <span>Candidate with the most simulated votes in each county</span></div><div className="legend-items">{candidates.map((candidate) => <CandidateKey key={candidate.id} candidate={candidate} />)}<span className="candidate-key"><i style={{ background: "#476476" }} />Tie / no data</span></div></div>

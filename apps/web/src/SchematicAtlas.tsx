@@ -29,7 +29,7 @@ export function SchematicAtlas({ references, result, candidates, selectedGeoId, 
           const fill = showResults && leader ? colors.get(leader) ?? UNDECIDED_COLOR : UNDECIDED_COLOR;
           return <button type="button" key={county.geoId} data-testid="county-map-tile"
             className={selectedGeoId === county.geoId ? "atlas-tile selected" : "atlas-tile"}
-            aria-pressed={selectedGeoId === county.geoId} aria-label={county.name + " county tile"}
+            aria-pressed={selectedGeoId === county.geoId} aria-label={county.name + " tile"}
             title={county.name + " · " + county.geoId + " · schematic index"}
             style={{ backgroundColor: fill }}
             onClick={() => onSelect(county.geoId)}
