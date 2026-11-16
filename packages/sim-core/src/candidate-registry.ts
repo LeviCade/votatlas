@@ -24,7 +24,7 @@ function validateName(name: unknown): asserts name is string {
     invalid("Candidate name must be a nonempty trimmed string of at most 128 characters");
   }
 }
-function validateCandidate(candidate: Candidate, existing = false): void {
+export function validateCandidateMetadata(candidate: Candidate, existing = false): void {
   if (typeof candidate !== "object" || candidate === null) invalid("Candidate must be an object");
   if (typeof candidate.id !== "string" || !candidate.id || candidate.id.length > 128 ||
       candidate.id !== candidate.id.trim() || /[\x00-\x1f\x7f]/.test(candidate.id)) {
@@ -32,6 +32,9 @@ function validateCandidate(candidate: Candidate, existing = false): void {
   }
   if (!existing && RESERVED_IDS.has(candidate.id)) {
     throw new SimulationError("RESERVED_CANDIDATE_ID", `Reserved candidate ID: ${candidate.id}`);
+  }
+  if (!existing && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(candidate.id)) {
+    invalid("New candidate IDs must be 1-128 ASCII letters, digits, dots, underscores, colons or hyphens, beginning with a letter or digit");
   }
   validateName(candidate.name);
   if (typeof candidate.color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(candidate.color)) {
@@ -46,14 +49,14 @@ function validateCandidate(candidate: Candidate, existing = false): void {
   }
 }
 
-function validateRegistry(election: ElectionDefinition): void {
+export function validateRegistry(election: ElectionDefinition): void {
   if (typeof election !== "object" || election === null || !Array.isArray(election.candidates) || election.candidates.length === 0) {
     invalid("Election requires a nonempty candidate registry");
   }
   const ids = new Set<string>();
   const orders = new Set<number>();
   for (const candidate of election.candidates) {
-    validateCandidate(candidate, true);
+    validateCandidateMetadata(candidate, true);
     if (ids.has(candidate.id)) throw new SimulationError("DUPLICATE_CANDIDATE", `Duplicate candidate ID: ${candidate.id}`);
     if (orders.has(candidate.ballotOrder)) invalid(`Duplicate ballotOrder: ${candidate.ballotOrder}`);
     ids.add(candidate.id);
@@ -96,7 +99,7 @@ export function addCandidate(
     id: addition.id, name: addition.name, color: addition.color, ballotOrder,
     ...(addition.partyLabel === undefined ? {} : { partyLabel: addition.partyLabel })
   };
-  validateCandidate(newCandidate);
+  validateCandidateMetadata(newCandidate);
   if (existing.some(candidate => candidate.ballotOrder === ballotOrder)) {
     invalid(`ballotOrder ${ballotOrder} already exists`);
   }
@@ -133,13 +136,21 @@ export function renameCandidate(election: ElectionDefinition, candidateId: Candi
   return next;
 }
 
-/** Removal is allowed ONLY for candidates with zero baseline votes in every county. */
+/**
+ * History-aware candidate removal. All callers MUST provide the full active scenario.
+ * A zero baseline is not evidence of safety: current votes, references, and proportional
+ * redistribution semantics can depend on the candidate even when final support is zero.
+ */
 export function removeZeroVoteCandidate(
   election: ElectionDefinition,
   baseUnits: readonly BaseUnitResult[],
-  candidateId: CandidateId
+  candidateId: CandidateId,
+  scenario: Scenario
 ): CandidateRegistryExtension {
   validateBaseline(election, baseUnits);
+  if (scenario === undefined || scenario === null) {
+    throw new SimulationError("INVALID_SCENARIO", "Active scenario is required for safe candidate removal");
+  }
   if (!election.candidates.some(candidate => candidate.id === candidateId)) {
     throw new SimulationError("UNKNOWN_CANDIDATE", `Unknown candidate: ${candidateId}`);
   }
@@ -147,9 +158,40 @@ export function removeZeroVoteCandidate(
   if (baseUnits.some(row => row.votes[candidateId] !== 0)) {
     throw new SimulationError("CANDIDATE_HAS_VOTES", `Cannot remove ${candidateId}: baseline votes would be lost`);
   }
+  // Simulate first.  This also validates all actions, capacities, geographic scopes,
+  // and the candidate's support after the complete active history.
+  const before = simulateElection(election, baseUnits, scenario);
+  if (before.units.some(row => row.votes[candidateId] !== 0)) {
+    throw new SimulationError("CANDIDATE_HAS_VOTES", `Cannot remove ${candidateId}: active history gives it votes`);
+  }
+  const normalized = parseScenario(serializeScenario(scenario));
+  for (const action of normalized.actions) {
+    if (action.type === "TRANSFER_PP" &&
+        (action.fromCandidateId === candidateId || action.toCandidateId === candidateId)) {
+      throw new SimulationError("CANDIDATE_IN_ACTIVE_HISTORY", `Cannot remove ${candidateId}: transfer ${action.id} refers to it`);
+    }
+    if (action.type === "SET_SHARE" && (
+        action.candidateId === candidateId ||
+        (action.redistribution.kind === "explicit-donors" && action.redistribution.candidateIds.includes(candidateId)) ||
+        action.redistribution.kind === "proportional-other"
+    )) {
+      throw new SimulationError("CANDIDATE_IN_ACTIVE_HISTORY", `Cannot remove ${candidateId}: share ${action.id} depends on it`);
+    }
+  }
   const next = copyElection(election);
   next.candidates = next.candidates.filter(candidate => candidate.id !== candidateId);
   const units = copyRows(baseUnits);
   for (const row of units) delete row.votes[candidateId];
-  return { election: next, baseUnits: units };
+  const after = simulateElection(next, units, normalized);
+  // Independent final numerical proof for every county/category.
+  for (let index = 0; index < before.units.length; index++) {
+    const beforeRow = before.units[index]!;
+    const afterRow = after.units[index]!;
+    if (beforeRow.geoId !== afterRow.geoId || beforeRow.ballots !== afterRow.ballots ||
+        beforeRow.otherBallots !== afterRow.otherBallots ||
+        Object.entries(afterRow.votes).some(([id, votes]) => votes !== beforeRow.votes[id])) {
+      throw new SimulationError("CANDIDATE_IN_ACTIVE_HISTORY", `Cannot remove ${candidateId}: replay would change ballots`);
+    }
+  }
+  return { election: next, baseUnits: units, scenario: normalized };
 }

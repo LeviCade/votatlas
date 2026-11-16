@@ -55,3 +55,71 @@ const updated = simulateElection(extended.election, extended.baseUnits, nextScen
 - New stable UI-facing errors: `INVALID_CANDIDATE`, `DUPLICATE_CANDIDATE`, `RESERVED_CANDIDATE_ID`, `CANDIDATE_HAS_VOTES` (in addition to existing `UNKNOWN_CANDIDATE`, `INVALID_BASE_UNIT`, `INVALID_ACTION`, and `INTEGER_OVERFLOW`).
 
 Native Vitest tests exercise 2/3/5/10 candidate registries, chained 3→4→5 and 5→10 extensions, zero-support backfills, history preservation with a previously zero-support donor, deterministic 95-county replay, 220 successive mixed actions, order sensitivity, exact reset, integer conservation, and strict error validation. Candidate additions never change the provenance `dataStatus` of the underlying observed baseline; presentations must visibly label hypothetical additions as scenario modeling.
+
+## Round Three — portable ScenarioProject v2 and trusted restore
+
+Version **1** is unchanged: `serializeScenario` / `parseScenario` contain only ordered actions and the election ID. v1 imports against a trusted source fixture still work via `restoreScenarioProject`, but **cannot restore a newly created candidate or verify a source dataset revision**. Use v2 for exports from custom-candidate sessions.
+
+```ts
+import {
+  addCandidate, appendAction, createScenarioProject,
+  serializeScenarioProject, parseScenarioProject, restoreScenarioProject,
+  removeZeroVoteCandidate
+} from "@votatlas/sim-core";
+
+// Preserve the authoritative source fixture separately from the working model.
+const sourceElection = fixture.election;
+const sourceBaseUnits = fixture.units;
+let { election, baseUnits, scenario } = {
+  election: sourceElection, baseUnits: sourceBaseUnits,
+  scenario: { schemaVersion: 1 as const, electionId: sourceElection.id, actions: [] }
+};
+
+// Always pass ACTIVE history to addCandidate, so earlier proportional donor sets
+// are frozen before a new zero-vote candidate could affect earlier operations.
+const next = addCandidate(election, baseUnits, {
+  id: "custom-4", name: "Fictional fourth", color: "#AABBCC"
+}, scenario);
+election = next.election;
+baseUnits = next.baseUnits;
+scenario = next.scenario!;
+
+// Later, export all necessary metadata and actions, not untrusted ballot rows.
+const project = createScenarioProject(
+  sourceElection, sourceBaseUnits, election, baseUnits, scenario
+);
+const portableJson = serializeScenarioProject(project);
+
+// In a new session, re-load the SAME trusted source dataset before importing.
+const restored = restoreScenarioProject(portableJson, sourceElection, sourceBaseUnits);
+election = restored.election;
+baseUnits = restored.baseUnits;
+scenario = restored.scenario;
+const result = restored.result;
+
+// v1/v2 detection for a file chooser:
+const parsed = parseScenarioProject(portableJson); // Scenario (v1) | ScenarioProjectV2 (v2)
+
+// History-aware removal REQUIRES the fourth argument, even for empty history.
+// It preserves scenario and rejects nonzero current votes or references.
+const removed = removeZeroVoteCandidate(election, baseUnits, "custom-4", scenario);
+```
+
+**V2 project shape:** `{ schemaVersion: 2, format: "votatlas-scenario-project", source: { electionId, geographyVintage, dataStatus, digest }, registry: { additions, overrides, candidateOrder }, scenario }`. `digest` is a browser/Node-independent SHA-256 over the *trusted* election definition (including its source candidate metadata and provenance) and every source county/ballot category in canonical sorted order. No source vote rows are embedded. Added fictional candidates include ID/name/color/ballot order/optional party label, and always receive exactly zero source votes. Metadata overrides may edit labels, colors and party labels but never source candidate IDs or ballot order. `candidateOrder` preserves UI registry display order. `scenario` retains full ordered v1 adjustments, including frozen explicit donor lists established at candidate-addition time.
+
+**Important safety rule:** the import caller supplies canonical `sourceElection` and `sourceBaseUnits`, not a user-edited baseline. The importer verifies the election identity, vintage, status, SHA-256 digest, candidate definitions, and full action replay *before* returning any state. A fixture revision must be treated as a different dataset even when its election ID has not changed; no silent rebase or conversion is performed. Export rejects working baselines whose historical ballots were modified. Maximum JSON payload is 1 MiB, with a 2,500-action cap. Newly created IDs use restricted ASCII characters and disallow JS-reserved names. All errors use stable `SimulationError.code` values (`SOURCE_MISMATCH`, `INVALID_PROJECT`, `UNSUPPORTED_PROJECT_VERSION`, `PROJECT_TOO_LARGE`, plus existing candidate/action codes).
+
+**Removal is deliberately more strict than Round Two:** `removeZeroVoteCandidate(election, baseUnits, id, scenario)` now requires the full active scenario and may return `.scenario`. It refuses nonzero baseline votes, nonzero final votes, direct action references, and `proportional-other` actions that could change when a candidate disappears. It replays before and after removal and proves county ballot preservation. This is a breaking change for legacy 3-argument calls: an omitted scenario now throws `INVALID_SCENARIO`. The UI must also restrict removal to its own hypothetical candidates; the source fixture has no intrinsic "fictional added" flag in v1 contracts. A source candidate cannot be omitted from a v2 project.
+
+**Provenance boundary:** a project digest is an identity check against an application-trusted fixture, not a signature of authenticity. It does not assert official election results or allow importing arbitrary voter records. No third-party proprietary election data or algorithm is included.
+
+Native commands (CI uses frozen pnpm lockfile):
+
+```bash
+pnpm install --frozen-lockfile
+pnpm --filter @votatlas/sim-core typecheck
+pnpm --filter @votatlas/sim-core test
+pnpm -r --if-present typecheck
+pnpm -r --if-present test
+pnpm -r --if-present build
+```

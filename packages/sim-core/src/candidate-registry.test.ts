@@ -127,12 +127,12 @@ describe("candidate-registry first-class sandbox operations", () => {
     expect(expanded.election.candidates.find(c => c.id === "future")?.name).toBe("Fictional future");
     expect(simulateElection(renamed, expanded.baseUnits, empty())).toEqual(simulateElection(expanded.election, expanded.baseUnits, empty()));
     code(() => renameCandidate(expanded.election, "missing", "Test"), "UNKNOWN_CANDIDATE");
-    code(() => removeZeroVoteCandidate(e, b, "id-0"), "CANDIDATE_HAS_VOTES");
-    const restored = removeZeroVoteCandidate(renamed, expanded.baseUnits, "future");
+    code(() => removeZeroVoteCandidate(e, b, "id-0", empty()), "CANDIDATE_HAS_VOTES");
+    const restored = removeZeroVoteCandidate(renamed, expanded.baseUnits, "future", empty());
     expect(restored.election).toEqual(e);
     expect(restored.baseUnits).toEqual(b);
-    code(() => removeZeroVoteCandidate(e, b, "missing"), "UNKNOWN_CANDIDATE");
-    code(() => removeZeroVoteCandidate(election(1), rows(1, 1).map(r => ({ ...r, votes: { "id-0": 0 } })), "id-0"), "INVALID_CANDIDATE");
+    code(() => removeZeroVoteCandidate(e, b, "missing", empty()), "UNKNOWN_CANDIDATE");
+    code(() => removeZeroVoteCandidate(election(1), rows(1, 1).map(r => ({ ...r, votes: { "id-0": 0 } })), "id-0", empty()), "INVALID_CANDIDATE");
   });
 
   it("candidate addition after non-empty scenario requires explicit replay against extended baseline", () => {
