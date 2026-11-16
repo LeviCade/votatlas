@@ -30,9 +30,13 @@ export interface MapE2EInspection {
   rendered: boolean;
   zoom: number;
   moving: boolean;
+  selectedFilter: unknown;
 }
 interface MapE2EWindow extends Window {
-  __votatlasMapForE2E?: { inspectCounty: (geoId: string) => MapE2EInspection };
+  __votatlasMapForE2E?: {
+    inspectCounty: (geoId: string) => MapE2EInspection;
+    projectPoint: (lon: number, lat: number) => { x: number; y: number };
+  };
 }
 
 /** Standalone original map style: no remote tiles, keys, copied imagery or map data. */
@@ -130,6 +134,7 @@ export function MapCanvas({ counties, selectedGeoId, selectedGeoIds, focusSelect
           if (new URLSearchParams(window.location.search).get("e2e") === "1") {
             const diagnosticWindow = window as MapE2EWindow;
             diagnosticWindow.__votatlasMapForE2E = {
+              projectPoint: (lon, lat) => { const p = map.project([lon, lat]); return { x: p.x, y: p.y }; },
               inspectCounty: (geoId: string): MapE2EInspection => {
                 const feature = map.querySourceFeatures(SOURCE_ID)
                   .find(f => f.properties?.geoId === geoId);
@@ -141,6 +146,7 @@ export function MapCanvas({ counties, selectedGeoId, selectedGeoIds, focusSelect
                   winnerCandidateId: (feature?.properties?.winnerCandidateId as string | undefined) ?? null,
                   layerColorExpression: map.getPaintProperty(FILL_LAYER, "fill-color"),
                   rendered, zoom: map.getZoom(), moving: map.isMoving(),
+                  selectedFilter: map.getFilter(SELECTED_LAYER),
                 };
               },
             };

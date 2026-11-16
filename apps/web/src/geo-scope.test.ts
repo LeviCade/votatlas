@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getTennesseeSyntheticFixture, getTennesseeRealCountyGeoJSON } from "@votatlas/data";
 import type { Adjustment } from "@votatlas/contracts";
-import { paintCounties } from "@votatlas/map";
+import { paintCounties, uniqueLeader } from "@votatlas/map";
 import { addRegistryCandidate, applyRegistryAction, initializeRegistrySandbox, undoRegistryAction } from "./sandbox";
 import { exportPortableProject, importPortableProject } from "./portable";
 import { normalizedCountyIds, resolveScope, selectedCountyIds, summarizeScope } from "./geo-scope";
@@ -136,8 +136,9 @@ describe("Round Four geographic scope isolation and contextual totals", () => {
     for (const f of painted.features) {
       const unit=after.result.units.find(row=>row.geoId===f.properties.geoId)!;
       expect(unit).toBeDefined();
-      expect(f.properties.winnerCandidateId).toBe(unit.votes.aster === unit.votes.cedar && unit.votes.aster > unit.votes.briar
-        ? null : f.properties.winnerCandidateId);
+      expect(f.properties.winnerCandidateId).toBe(uniqueLeader(unit.votes, after.election.candidates.map(c=>c.id)));
+      const winner=after.election.candidates.find(c=>c.id === f.properties.winnerCandidateId);
+      expect(f.properties.fill).toBe(winner?.color ?? "#476476");
     }
     const outsideBefore=paintCounties(shapes,before.result,before.election.candidates)
       .features.find(f=>f.properties.geoId==="47001")!;
