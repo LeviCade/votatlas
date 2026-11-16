@@ -22,13 +22,16 @@ const numbers = value => {
 };
 export function verifySevenTicketHeader(text) {
   demand(typeof text === 'string', 'missing source text');
-  const preamble = text.split(/\bAnderson(?: County)?\b/)[0];
-  demand(/November\s+5,\s+2024/.test(preamble), 'incorrect election date');
-  demand(/President and Vice President of the United States/.test(preamble), 'incorrect office');
-  const actual = [...preamble.matchAll(/^\s*([1-7])\.\s+(Electors for .*?)\s*$/gm)];
-  demand(actual.length === 7, 'expected seven ordered presidential ticket labels');
-  for (let i = 0; i < 7; i++) {
-    demand(Number(actual[i][1]) === i + 1 && actual[i][2].replace(/\s+/g, ' ').trim() === TICKET_HEADERS[i], 'presidential ticket mislabeling or column permutation at ' + (i + 1));
+  const electionText = text.split('United States Senate')[0];
+  const pages = electionText.split('\f').filter(page => /President and Vice President of the United States/.test(page));
+  demand(pages.length > 0, 'presidential pages missing');
+  for (const [pageIndex, page] of pages.entries()) {
+    demand(/November\s+5,\s+2024/.test(page), 'incorrect election date on page ' + (pageIndex + 1));
+    const actual = [...page.matchAll(/^\s*([1-7])\.\s+(Electors for .*?)\s*$/gm)];
+    demand(actual.length === 7, 'expected seven ordered presidential ticket labels on page ' + (pageIndex + 1));
+    for (let i = 0; i < 7; i++) {
+      demand(Number(actual[i][1]) === i + 1 && actual[i][2].replace(/\s+/g, ' ').trim() === TICKET_HEADERS[i], 'presidential ticket mislabeling or column permutation on page ' + (pageIndex + 1) + ' at ' + (i + 1));
+    }
   }
   return true;
 }

@@ -37,3 +37,8 @@ test('duplicate and missing county subtotals fail closed', () => {
 test('missing, duplicated, or rearranged candidate columns are rejected', () => {
   assert.throws(()=>parsePrecinctReport(sample().replace('Anderson Local      2     4','Anderson Local      2     4     99'),refs),/do not sum|no precinct/);
 });
+
+test('later-page candidate label drift is rejected', () => {
+  const second = header.replace('3. '+TICKET_HEADERS[2],'3. '+TICKET_HEADERS[3]);
+  assert.throws(()=>verifySevenTicketHeader(sample().replace('United States Senate','\f'+second+'\nUnited States Senate')),/mislabeling/);
+});
