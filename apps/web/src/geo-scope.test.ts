@@ -22,7 +22,7 @@ function assertAtomicConservation(before: ReturnType<typeof start>, after: Retur
       expect(row).toEqual(prev);
     } else {
       if (!turnout) expect(row.ballots).toBe(prev.ballots);
-      asterDelta+=row.votes.aster! - prev.votes.aster!;
+      asterDelta+=prev.votes.aster! - row.votes.aster!;
       cedarDelta+=row.votes.cedar! - prev.votes.cedar!;
     }
   }
