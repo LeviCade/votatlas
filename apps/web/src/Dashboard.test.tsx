@@ -30,7 +30,7 @@ describe("candidate-neutral responsive dashboard", () => {
     expect((markup.match(/data-testid="county-map-tile"/g) ?? []).length).toBe(95);
     expect(markup).toContain('aria-label="County selection list"');
     expect(markup).toContain("Find a county by name or FIPS code");
-    expect(markup).toContain("Demographics locked");
+    expect(markup).toContain("Hypothetical groups only");
     expect(markup).toContain("Simulation engine connected");
     expect(markup).toContain("Export JSON");
     expect(markup).toContain("Import JSON");
@@ -51,8 +51,10 @@ describe("candidate-neutral responsive dashboard", () => {
       for (const candidate of candidates) expect(markup).toContain(candidate.name);
     }
   });
-  it("keeps demographics inaccessible without a model", () => {
+  it("exposes opt-in synthetic Model Lab but not an observed demographic model", () => {
     const markup = render(source.election.candidates, baseline.result);
-    expect(markup).toMatch(/disabled=""[^>]*>Demographics<\/button>/);
+    expect(markup).toContain(">Model Lab</button>");
+    expect(markup).toContain("Hypothetical groups only");
+    expect(markup).not.toContain("Demographics locked");
   });
 });

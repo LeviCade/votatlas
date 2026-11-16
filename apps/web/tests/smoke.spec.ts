@@ -83,5 +83,5 @@ test("rejected impossible transfer and malformed import do not change results", 
   await page.getByRole("button", { name: "Import JSON" }).click();
   await expect(page.getByRole("alert")).toContainText("SOURCE_MISMATCH");
   expect(await votes(page, "county-votes-aster")).toBe(beforeAster);
-  await expect(page.getByRole("button", { name: "Demographics" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Model Lab" })).toBeEnabled();
 });
