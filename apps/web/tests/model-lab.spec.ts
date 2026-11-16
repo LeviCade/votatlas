@@ -71,7 +71,7 @@ test("opt-in fictional modeling: 3-county group transfer, other 92 counties unch
   await page.getByRole("button",{name:"Undo model action"}).click();
   expect(await count(page,"scope-votes-aster")).toBe(startAster);
   await page.getByRole("button",{name:"Exit model and restore ordinary results"}).click();
-  await expect(page.getByText("SYNTHETIC DATA")).toBeVisible();
+  await expect(page.getByText("SYNTHETIC DATA").first()).toBeVisible();
   expect(await count(page,"scope-votes-aster")).toBe(startAster);
 });
 
@@ -95,7 +95,7 @@ test("all 95 Tennessee counties: modeled turnout and distinct model-vs-source re
   expect(await count(page,"scope-ballots")).toBe(beforeBallots);
   await page.getByRole("button",{name:"Reset",exact:true}).click();
   expect(await count(page,"state-votes-aster")).toBe(before);
-  await expect(page.getByText("SYNTHETIC DATA")).toBeVisible();
+  await expect(page.getByText("SYNTHETIC DATA").first()).toBeVisible();
 });
 
 test("custom candidate + normal action + model transfer → canonical v3 reload; corrupted source rejected",async({page},info)=>{
