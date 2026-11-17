@@ -71,7 +71,7 @@ export function convertMarginal(rows,dimension){
    ensure(get(2)===sum(range(3,25).map(get))&&get(26)===sum(range(27,49).map(get)),'sex subtotal mismatch '+row.geoId);
    ensure(get(1)===get(2)+get(26),'population total mismatch '+row.geoId);
   }else ensure(get(1)===sum(range(2,25).map(get)),'education 25+ universe mismatch '+row.geoId);
-  const groups=categories.map(([id,label,indices])=>({id,label,estimate:sum(indices.map(get)),moe90:null,
+  const groups=categories.map(([id,label,indices])=>({id,label,estimate:sum(indices.map(get)),moe90:indices.length===1?row.cells[apiVariable(table,indices[0],'E')].moe90:null,
    sourceEstimateVariables:indices.map(i=>apiVariable(table,i,'E')),sourceMoeVariables:indices.map(i=>apiVariable(table,i,'M'))}));
   const universeEstimate=age?sum(groups.map(g=>g.estimate)):get(1);
   ensure(universeEstimate===sum(groups.map(g=>g.estimate)),'derived partition mismatch '+row.geoId);
@@ -103,7 +103,7 @@ export function verifyDataset(dataset,refs){
    ensure(p.geoId===refs[i].geoId&&p.dimension===dimension,'GEOID/dimension mismatch');
    ensure(p.universe===(dimension==='age'?'population_18_plus':'population_25_plus'),'universe conflation');
    ensure(p.categories.length===(dimension==='age'?6:5),'category count invalid');
-   ensure(p.categories.every(c=>Number.isSafeInteger(c.estimate)&&c.estimate>=0&&c.moe90===null),'invalid category/MOE');
+   ensure(p.categories.every(c=>Number.isSafeInteger(c.estimate)&&c.estimate>=0&&(c.moe90===null||(c.sourceEstimateVariables.length===1&&Number.isSafeInteger(c.moe90)&&c.moe90>=0))),'invalid category/MOE');
    ensure(sum(p.categories.map(c=>c.estimate))===p.universeEstimate,'partition not conserved');
   });
  }

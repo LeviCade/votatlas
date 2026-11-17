@@ -15,7 +15,7 @@ describe('2024 ACS 5-year county population marginals',()=>{
    expect(rows.map(row=>row.geoId)).toEqual(expectedTennesseeGeoIds());
    for(const row of rows){
     expect(row.categories.reduce((sum,cat)=>sum+cat.estimate,0)).toBe(row.universeEstimate);
-    expect(row.categories.every(cat=>cat.moe90===null)).toBe(true);
+    expect(row.categories.every(cat=>cat.moe90===null||(cat.sourceEstimateVariables.length===1&&Number.isSafeInteger(cat.moe90)&&cat.moe90>=0))).toBe(true);
     expect(row.universe).toBe(dimension==='age'?'population_18_plus':'population_25_plus');
     expect(Object.isFrozen(row.categories[0])).toBe(true);
    }

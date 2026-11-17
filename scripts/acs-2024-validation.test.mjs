@@ -32,6 +32,8 @@ test('95 counties preserve correct age versus education denominators and MOE sen
  assert.equal(age[0].universeEstimate,0);assert.equal(education[0].universeEstimate,24);
  assert.equal(age[0].sourceTotalMoe90,null);
  assert.equal(a[0].cells[apiVariable('B01001',3,'E')].moe90,12);
+ assert.equal(education[0].categories.find(c=>c.id==='bachelors').moe90,12);
+ assert.equal(education[0].categories.find(c=>c.id==='high-school-equivalent').moe90,null);
  const d={datasetId:'tn-2024-acs5-county-population-marginals-v1',source:'US_CENSUS_2024_ACS_5YEAR',age,education};
  assert.equal(verifyDataset(d,refs),d);
 });
