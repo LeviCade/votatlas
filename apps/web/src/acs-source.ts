@@ -95,6 +95,10 @@ export function readTennesseeAcs(dimension:AcsDimension):AcsSourceState {
     assertAcsRows(dimension,rows);
     const provenance=api.getTennesseeAcs2024Provenance();
     if(!provenance||typeof provenance!=="object")throw Error("ACS source provenance is unavailable.");
+    const meta=provenance as Record<string,unknown>;
+    if(meta.releaseStatus!=="verified-census-source"||
+      typeof meta.payloadSha256!=="string"||!/^[a-f0-9]{64}$/i.test(meta.payloadSha256))
+      throw Error("ACS source release approval and SHA-256 verification are incomplete.");
     return {status:"available",dimension,rows,provenance};
   } catch(cause){
     return {status:"unavailable",dimension,
