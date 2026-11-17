@@ -159,11 +159,15 @@ export function compositionProvenance(source: AvailableAcsSource): CompositionSo
   // Do not substitute a link or an invented SHA when the source contract differs.
   if(raw.releaseStatus!=="verified-census-source")
     throw new Error("The Census source's verification gate is not open; no population-to-electorate fitting is permitted.");
-  const sourceUrl = raw.sourceDirectory ?? raw.sourceUrl;
-  const sourceDigest = typeof raw.payloadSha256 === "string" ? "sha256:" + raw.payloadSha256 : raw.sourceDigest;
+  const tableId=source.dimension==="age"?"B01001":"B15003";
+  const tables = raw.tables as Record<string,Record<string,unknown>> | undefined;
+  const table = tables?.[tableId];
+  const sourceUrl = table?.sourceUrl;
+  const sourceDigest = typeof table?.fullSourceSha256 === "string" ?
+    "sha256:" + table.fullSourceSha256 : null;
   if (typeof sourceUrl !== "string" || !/^https:\/\/(?:[a-z0-9.-]+\.)?census\.gov\//i.test(sourceUrl) ||
       typeof sourceDigest !== "string" || !/^sha256:[a-f0-9]{64}$/i.test(sourceDigest))
-    throw new Error("Verified Census source URL and SHA-256 provenance are required before fitting a modeled electorate.");
+    throw new Error("Verified Census source URL and source-table SHA-256 provenance are required before fitting a modeled electorate.");
   return {
     publisher:"US Census Bureau",survey:"ACS",surveyYear:2024,period:"5-year",
     geographyVintage:"2020",sourceUrl,sourceDigest,releaseStatus:"verified",
