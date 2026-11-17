@@ -120,11 +120,11 @@ test("R6 styled turnout slider supports Tennessee statewide model changes and ca
   await page.reload();
   await page.getByLabel("Scenario project JSON · v2 or legacy v1").fill(raw);
   await page.getByRole("button",{name:"Import JSON"}).click();
-  expect(await number(page,"scope-ballots").catch(()=>after)).toBe(after);
+  await page.getByLabel("Area scope").selectOption("state");
+  expect(await number(page,"scope-ballots")).toBe(after);
   await page.getByRole("button",{name:"Model Lab",exact:true}).click();
   await expect(page.getByText(/Modeled partition:/)).toBeVisible();
   await page.getByRole("button",{name:"Reset model edits"}).click();
-  await page.getByLabel("Area scope").selectOption("state");
   expect(await number(page,"scope-ballots")).toBe(before);
 });
 test("R6 real Davidson Census polygon winner fill changes after full-cohort modeled support slider",async({page},info)=>{
