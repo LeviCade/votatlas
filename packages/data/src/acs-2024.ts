@@ -52,3 +52,32 @@ export function getTennesseeAcs2024CountyMarginals(dimension:TennesseeAcsDimensi
  }
  return deepFreeze(rows);
 }
+
+/** Adapter for E2's hypothetical population-to-electorate model; source data remain observed ACS populations. */
+export interface TennesseeAcsCompositionSourceProvenance {
+ readonly publisher:'US Census Bureau';
+ readonly survey:'ACS';
+ readonly surveyYear:2024;
+ readonly period:'5-year';
+ readonly geographyVintage:'2020';
+ readonly sourceUrl:string;
+ readonly sourceDigest:string;
+ readonly releaseStatus:'verified';
+ readonly dimension:TennesseeAcsDimension;
+ readonly tableId:'B01001'|'B15003';
+}
+export function getTennesseeAcs2024CompositionSourceProvenance(dimension:TennesseeAcsDimension):TennesseeAcsCompositionSourceProvenance{
+ getTennesseeAcs2024CountyMarginals(dimension);
+ const m=getTennesseeAcs2024Provenance();
+ const tableId=dimension==='age'?'B01001':'B15003';
+ const table=(m.tables as Record<string,{sourceUrl:string;fullSourceSha256:string}>|undefined)?.[tableId];
+ if(!table||!/^https:\/\/www2\.census\.gov\//.test(table.sourceUrl)||!/^[0-9a-f]{64}$/.test(table.fullSourceSha256)){
+  throw new CensusPopulationDataUnavailableError('Verified first-party Census source digest unavailable');
+ }
+ return Object.freeze({
+  publisher:'US Census Bureau',survey:'ACS',surveyYear:2024,period:'5-year',
+  geographyVintage:'2020',sourceUrl:table.sourceUrl,
+  sourceDigest:'sha256:'+table.fullSourceSha256,
+  releaseStatus:'verified',dimension,tableId
+ });
+}

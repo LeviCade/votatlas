@@ -16,3 +16,6 @@ export { HistoricalElectionUnavailableError, getTennessee2024PresidentialFixture
 /** Genuine 2024 ACS county POPULATION composition, never observed voting behavior. */
 export type {TennesseeAcsDimension,TennesseeAcsCategory,TennesseeAcsCountyMarginal,TennesseeAcsProvenance} from './acs-2024.js';
 export {CensusPopulationDataUnavailableError,getTennesseeAcs2024CountyMarginals,getTennesseeAcs2024Provenance} from './acs-2024.js';
+
+export type {TennesseeAcsCompositionSourceProvenance} from './acs-2024.js';
+export {getTennesseeAcs2024CompositionSourceProvenance} from './acs-2024.js';

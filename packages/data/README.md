@@ -95,3 +95,7 @@ The audit prints checksums and numerical evidence only; it never writes an appro
 ## Round Five historical original-source authentication
 
 The seven-ticket by-office SOS publisher-indexed text independently confirms the 3,063,942 reported total. This is **not** proof of original government file-byte identity. See [SOURCE_AUTHENTICATION_2024_R5.md](SOURCE_AUTHENTICATION_2024_R5.md) for precise source evidence, unknown categories, rights analysis, two required additional original files and reproducible auditor commands. The historical fixture and getter remain BLOCKED.
+
+## 2024 Census ACS county demographic population marginals
+
+The source-verified 2024 ACS 5-year B01001 adult age 18+ and B15003 educational attainment age 25+ **resident population** marginals are available through the typed immutable getters in src/acs-2024.ts, with all 95 county GEOIDs and full Census-source SHA-256 provenance. See [ACS_2024_SOURCE_METHOD.md](ACS_2024_SOURCE_METHOD.md) for exact variable mapping, distinct universes, original MOE sentinel treatment and official-source reproduction. **These are not voters, ballots, turnout, eligible persons, or observed support.** The separate 2024 Tennessee SOS historical election getter stays blocked.
