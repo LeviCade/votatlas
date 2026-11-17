@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "tn-2024-acs5-county-population-marginals-v1",
+  "releaseStatus": "blocked",
+  "publisher": "United States Census Bureau",
+  "referenceYear": 2024,
+  "vintage": "2020-2024",
+  "dataset": "2024 ACS 5-Year Detailed Tables — Table-Based Summary File",
+  "reason": "Full original Census source file hashes and 95 verified county rows required",
+  "tableIds": [
+    "B01001",
+    "B15003"
+  ],
+  "sourceDirectory": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/",
+  "ageUniverse": "B01001 population 18+ derived from disjoint male and female adult cells",
+  "educationUniverse": "B15003 population 25 years and over",
+  "noVoterInference": true,
+  "payloadSha256": null,
+  "rights": "U.S. Census Bureau federal public data; 17 USC 105; no Census endorsement implied"
+}
