@@ -142,3 +142,75 @@ test("R6 real Davidson Census polygon winner fill changes after full-cohort mode
   expect(before.fill).toBe("#7544A6");
   await screenshot(page,info,"r6-real-map-davidson-winner-flip");
 });
+
+test("R6 sourced ACS age population → E2 hypothetical cohort fit → 3-county transfer and canonical v3, or explicit integration gate",async({page},info)=>{
+  await page.goto("/?e2e=1");
+  await page.getByLabel("Area scope").selectOption("multi");
+  await choose(page,"Davidson","47037");
+  await choose(page,"Knox","47093");
+  await choose(page,"Shelby","47157");
+  const beforeBallots=await number(page,"scope-ballots");
+  const beforeAster=await number(page,"scope-votes-aster");
+  const beforeCedar=await number(page,"scope-votes-cedar");
+  await expect.poll(async()=> (await inspect(page,"47037"))?.moving,{timeout:25000}).toBe(false);
+  const outsideBefore=await inspect(page,"47001");
+  await page.getByRole("button",{name:"Model Lab",exact:true}).click();
+  await page.getByRole("checkbox",{name:/I understand this is an explicitly hypothetical model/}).check();
+  await page.getByRole("button",{name:"Age · 18+"}).click();
+  const sourceUnavailable=page.getByTestId("acs-source-unavailable");
+  if(await sourceUnavailable.isVisible()){
+    await expect(sourceUnavailable).toContainText(/verified|source|ACS|Census/i);
+    await expect(page.getByTestId("acs-population-denominator")).toHaveCount(0);
+    await expect(page.getByRole("button",{name:"Start source-labeled hypothetical age model"})).toBeDisabled();
+    await screenshot(page,info,"r6-acs-age-not-integrated-no-fabricated-shares");
+  } else {
+    await expect(page.getByTestId("acs-source-metadata")).toContainText("B01001");
+    await expect(page.getByTestId("acs-source-sha256")).toContainText("SHA-256");
+    expect(await number(page,"acs-population-denominator")).toBeGreaterThan(0);
+    await expect(page.getByText("Census population ≠ voting behavior.")).toBeVisible();
+    const start=page.getByRole("button",{name:"Start source-labeled hypothetical age model"});
+    if(await start.isDisabled()){
+      await expect(page.getByTestId("acs-fit-unavailable")).toContainText("E2");
+      await screenshot(page,info,"r6-source-ready-fit-not-yet-integrated");
+    }else{
+      await page.getByRole("slider",{name:/Hypothetical electorate weight for/}).first().focus();
+      await page.keyboard.press("ArrowRight");
+      await start.click();
+      await expect(page.getByText(/Modeled partition:/)).toBeVisible();
+      await expect(page.getByText(/Census population ≠ voting behavior/)).toBeVisible();
+      await expect(page.getByTestId("model-area")).toContainText("3 selected counties");
+      await raiseCedar(page,1);
+      const lost=beforeAster-await number(page,"scope-votes-aster");
+      const gained=await number(page,"scope-votes-cedar")-beforeCedar;
+      expect(lost).toBeGreaterThan(0);
+      expect(lost).toBe(gained);
+      expect(await number(page,"scope-ballots")).toBe(beforeBallots);
+      expect((await inspect(page,"47001"))?.fill).toBe(outsideBefore?.fill);
+      await screenshot(page,info,"r6-acs-backed-hypothetical-age-model");
+      const download=page.waitForEvent("download");
+      await page.getByRole("button",{name:"Export JSON"}).click();
+      await download;
+      const saved=await page.getByLabel("Canonical model project JSON · v3").inputValue();
+      const parsed=JSON.parse(saved);
+      expect(parsed.schemaVersion).toBe(3);
+      expect(parsed.cohort.model.modelId).not.toBe("fictional-cohort-demo");
+      expect(parsed.cohort.actions).toHaveLength(1);
+      await page.reload();
+      await page.getByLabel("Scenario project JSON · v2 or legacy v1").fill(saved);
+      await page.getByRole("button",{name:"Import JSON"}).click();
+      await page.getByLabel("Area scope").selectOption("multi");
+      await choose(page,"Davidson","47037");
+      await choose(page,"Knox","47093");
+      await choose(page,"Shelby","47157");
+      expect(await number(page,"scope-votes-cedar")).toBe(beforeCedar+gained);
+      await page.getByRole("button",{name:"Model Lab",exact:true}).click();
+      await expect(page.getByText(/Modeled partition:/)).toBeVisible();
+      await screenshot(page,info,"r6-acs-model-restored-v3");
+      parsed.source.digest="sha256:"+"0".repeat(64);
+      await page.getByLabel("Canonical model project JSON · v3").fill(JSON.stringify(parsed));
+      await page.getByRole("button",{name:"Import JSON"}).click();
+      await expect(page.locator(".scenario-error")).toContainText("SOURCE_MISMATCH");
+      expect(await number(page,"scope-votes-cedar")).toBe(beforeCedar+gained);
+    }
+  }
+});
