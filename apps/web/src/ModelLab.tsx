@@ -158,7 +158,7 @@ export function ModelLab({
         <div className="model-metadata">
           <strong>Modeled partition: {model.partition.partitionId}</strong>
           <small>One {model.partition.kind === "joint" ? "explicit joint cross-tabulation" : "single-dimension disjoint partition"} · {model.partition.dimensionIds.join(", ")}</small>
-          <small>{model.dimension === "fictional" ? "Fictional seed" : "Source-bound model reference"}: {model.seed} · 95 Tennessee counties · post-classic baseline verified</small>
+          <small>{currentDimension === "fictional" ? "Fictional seed" : "Source-bound model reference"}: {model.seed} · 95 Tennessee counties · post-classic baseline verified</small>
         </div>
         {currentDimension !== "fictional" && acsSource &&
           <AcsPopulationPanel dimension={currentDimension} source={acsSource} selectedIds={selectedIds}
@@ -167,7 +167,7 @@ export function ModelLab({
             onStart={()=>false}/>}
         <p className="help-text">Current adjustment geography: <strong data-testid="model-area">{scopeLabel}</strong>. Use the real map or accessible county selector to change the area without rebuilding the model.</p>
         <fieldset className="model-cohort-choices">
-          <legend>{model.dimension === "fictional" ? "Select fictional groups to model" : "Select hypothetical electorate cohorts"}</legend>
+          <legend>{currentDimension === "fictional" ? "Select fictional groups to model" : "Select hypothetical electorate cohorts"}</legend>
           {model.partition.cohorts.map(group =>
             <label className="model-group-choice" key={group.id}>
               <input type="checkbox" checked={cohortIds.includes(group.id)} onChange={event =>
