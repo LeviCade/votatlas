@@ -85,7 +85,9 @@ export function DemographicSliders({ model, candidates, selectedIds, cohortIds, 
     setTargets(Object.fromEntries(candidates.map(c => [c.id,
       Math.round(pct(totals.votes[c.id] ?? 0, totals.candidateBallots) * 10) / 10])));
     setError("");
-  }, [key, candidates, totals.candidateBallots, totals.votes]);
+  // A fresh object of numeric totals must not re-trigger this setter after every render.
+  // The stable selection/action key captures when an applied engine state changes.
+  }, [key]);
   useEffect(() => {
     const ids = candidates.map(c => c.id);
     setDonorId(current => ids.includes(current) ? current : ids[1] ?? ids[0] ?? "");
