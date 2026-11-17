@@ -11,8 +11,10 @@ import {
   importLegacyRegistryScenario,
 } from "./sandbox";
 import type { RegistrySandboxSession } from "./sandbox";
+import type { AcsDimension } from "./acs-source";
+import { readTennesseeAcs } from "./acs-source";
 import { exportPortableProject, importPortableProject } from "./portable";
-import { beginSyntheticModel, appendModelAction, canonicalV3Ready, exportProjectWithModel,
+import { beginSyntheticModel, beginCompositionModel, compositionFitReady, appendModelAction, canonicalV3Ready, exportProjectWithModel,
   importCanonicalProject, modelGeneratorReady, resetModelActions, undoModelAction } from "./model-lab";
 import type { SyntheticModelSession } from "./model-lab";
 
@@ -129,6 +131,18 @@ export default function App() {
       return true;
     } catch (cause) { setError(errorMessage(cause)); setMessage(""); return false; }
   }
+  function beginAcs(dimension:AcsDimension,weights:Record<string,number>):boolean {
+    if (model) { setError("Exit the current disjoint model before starting another population dimension."); return false; }
+    try {
+      const source=readTennesseeAcs(dimension);
+      if(source.status!=="available")throw new Error(source.reason);
+      const next=beginCompositionModel(session,source,weights);
+      setModel(next);
+      setError("");
+      setMessage("Started a source-labeled ACS population model. Candidate support and turnout remain hypothetical.");
+      return true;
+    } catch(cause){setError(errorMessage(cause));setMessage("");return false;}
+  }
   function modelAction(action: CohortAction): boolean {
     if (!model) { setError("Start the synthetic model before applying a cohort action."); return false; }
     try {
@@ -158,6 +172,7 @@ export default function App() {
   return <Dashboard election={session.election} trustedSource={fixture.election}
     result={model?.output.result ?? session.result} baseline={session.baseline}
     model={model} modelGeneratorReady={modelGeneratorReady} canonicalV3Ready={canonicalV3Ready}
+    compositionFitReady={compositionFitReady} onBeginAcs={beginAcs}
     onBeginModel={beginModel} onModelAction={modelAction} onUndoModel={undoModel}
     onResetModel={resetModel} onExitModel={exitModel}
     references={references} geometry={geometry} scenario={session.scenario}
