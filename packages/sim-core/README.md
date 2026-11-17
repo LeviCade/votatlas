@@ -262,3 +262,96 @@ continue to restore unchanged. V3 exposes `RestoredScenarioProjectV3` with
 `result` (final modeled), `intermediate` (post-classic), `cohortResult`,
 `cohortPartition`, `cohortActions` and `model`. Max JSON size is 1 MiB, preserving
 the existing shared cap. Integration with E1's geographic UI is a separate PR.
+
+## Round Six — sourced population composition, **hypothetical electorate**
+
+`fitSyntheticElectorateFromComposition` accepts E3's validated 2024 ACS 5-year
+county **population** marginals, source provenance, and **explicit user-modeled
+assumptions**. It never infers votes, candidate preferences, eligible voters,
+or turnout from Census statistics. This is a synthetic-only transformation,
+separate from the source election and from the original Census figures.
+
+```ts
+import {
+  fitSyntheticElectorateFromComposition,
+  createEqualWeightCompositionAssumptions,
+  simulateCohortPartition,
+  createScenarioProjectV3
+} from "@votatlas/sim-core";
+
+const assumptions = createEqualWeightCompositionAssumptions(acsCountyMarginals);
+// UI must present and obtain explicit acceptance of these hypothetical
+// equal-relative-weight assumptions. Never auto-enable sourced behavior.
+const fitted = fitSyntheticElectorateFromComposition(
+  election, postClassicResult.units, acsCountyMarginals, verifiedAcsProvenance, assumptions
+);
+const output = simulateCohortPartition(election, postClassicResult.units,
+  fitted.partition, hypotheticalCohortActions);
+const project = createScenarioProjectV3(sourceElection, sourceUnits,
+  election, workingBaseUnits, classicScenario, fitted.partition,
+  hypotheticalCohortActions, fitted.modelProvenance);
+```
+
+### Data/assumption interface
+
+- `CountyPopulationMarginal[]`: E3-shaped county GEOID, label, `age`/`education`,
+  B01001/B15003 table, `population_18_plus`/`population_25_plus` universe,
+  original integer universe estimate and optional 90%-MOE, plus **exclusive**
+  categories with integer counts, optional 90%-MOEs and original matching `###E`
+  / `###M` variable IDs. No `null` estimates, hidden zero substitution,
+  suppressed Census sentinel codes, duplicate cells, overlapping source
+  variables, missing counties or non-adult/unknown variable IDs.
+- `CompositionSourceProvenance`: verified official-source label, Census URL,
+  SHA-256 of independently authenticated source payload, geography vintage,
+  survey year/period, universe dimension, table. E3 validates source
+  authenticity and the source-file SHA. This engine additionally computes its
+  own canonical hash of the supplied county population profiles; optional
+  `profileDigest` must match it. **Supplying a syntactically valid SHA does not
+  itself prove Census authenticity.**
+- `CompositionModelAssumptions`: 
+  `kind:'explicit-hypothetical-weights'`, universe matching selected source,
+  **turnoutWeightByCategory** for every category and either
+  `candidatePreference:{kind:'county-neutral'}` or
+  `candidatePreference:{kind:'explicit-relative-weights',byCategory:{...}}`
+  with every candidate ID explicitly included. Weights are finite, nonnegative,
+  at most `1000`, with up to six decimal places; zero total weight on a category
+  with ballots to allocate is rejected. The required eligibility rule is
+  `ballots-plus-population-weighted-slack`.
+- Output is `{partition, modelProvenance, audit}`. The partition is a standard
+  **synthetic**, mutually exclusive `SyntheticCohortPartition` for the existing
+  `simulateCohortPartition`; all candidates and `otherBallots` are allocated
+  independently by exact BigInt largest remainders with stable category-ID
+  tie-breaking. Known county `eligibleVoters` are conserved as cohort ballots
+  plus explicitly hypothetical population-weighted eligibility slack. The
+  audit retains source provenance/digests and per-county category counts/MOEs
+  and ballot reconciliation. No original source object is changed.
+
+### **Critical universe distinction**
+
+Age B01001 groups represent Census **population age 18+**. Education B15003
+represents **population age 25+**, which excludes 18–24-year-olds. A selected
+education profile therefore only supplies relative hypothetical weights for
+**the entire loaded ballot pool**; it does **not** imply that 18–24-year-old
+voters were absent, nor that all ballots or eligible voters are 25+ persons.
+These are different population denominators, neither is a ballot denominator.
+Never stack age and education marginals as independent electorates or infer a
+joint age×education distribution without independently verified joint cells.
+The model's `national` scope means only the counties loaded in this dataset.
+
+### Canonical project and UI integration
+
+No new project version or parallel serializer. Pass `fitted.modelProvenance`
+into the existing `createScenarioProjectV3`; its synthetic model `seed`
+contains canonical profile+assumption SHA-256 digests and the partition ID is
+cryptographically bound to that seed. Import validates this binding and then
+replays the exact saved cohort cells/actions from the trusted election source.
+The saved project **does not** embed or authenticate the original E3 ACS payload
+or fully reproduce every user-defined propensity from the model seed alone;
+re-fitting a modified scenario requires the separately sourced demographic
+profiles and the user's assumption controls. E1 should compare saved hashes
+with the current E3 profile and explicitly rebuild when either changes.
+Legacy v1/v2 and earlier fictional v3 projects remain supported unchanged.
+
+**No sourced tabs until E3's official verified Census getter is available.**
+The test marginals are entirely invented Census-*shaped* data, never fetched
+ACS or observed voter choices.

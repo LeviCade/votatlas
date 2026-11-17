@@ -16,3 +16,14 @@ export type { CohortAction, CohortCell, CohortCounty, CohortCellDelta, CohortDef
   CohortSimulationResult, SyntheticCohortPartition } from "./cohorts.js";
 
 export { createSyntheticDemoPartition, createSyntheticDemoModel, FICTIONAL_COHORT_MODEL_DESCRIPTION, FICTIONAL_COHORT_MODEL_VERSION, DEFAULT_FICTIONAL_COHORT_SEED } from "./demo-cohorts.js";
+
+export {
+  fitSyntheticElectorateFromComposition, fingerprintPopulationMarginals,
+  createEqualWeightCompositionAssumptions, compositionPartitionId,
+  COMPOSITION_MODEL_ID, COMPOSITION_MODEL_VERSION, COMPOSITION_HYPOTHESIS_WARNING
+} from "./composition.js";
+export type {
+  CompositionDimension, CompositionUniverse, PopulationCategory, CountyPopulationMarginal,
+  CompositionSourceProvenance, CandidatePreferenceAssumption, CompositionModelAssumptions,
+  CompositionCountyAudit, CompositionFitResult
+} from "./composition.js";
