@@ -154,27 +154,11 @@ export function importCanonicalProject(
 /** Checked source provenance is required before E2's fitting model can run.
  * E3 owns the underlying verified dataset; this adapter cannot invent a digest. */
 export function compositionProvenance(source: AvailableAcsSource): CompositionSourceProvenance {
-  const raw = source.provenance as Record<string, unknown>;
-  // The E3 native source getter is required to supply usable publisher metadata.
-  // Do not substitute a link or an invented SHA when the source contract differs.
-  if(raw.releaseStatus!=="verified-census-source")
-    throw new Error("The Census source's verification gate is not open; no population-to-electorate fitting is permitted.");
-  const tableId=source.dimension==="age"?"B01001":"B15003";
-  const tables = raw.tables as Record<string,Record<string,unknown>> | undefined;
-  const table = tables?.[tableId];
-  const sourceUrl = table?.sourceUrl;
-  const sourceDigest = typeof table?.fullSourceSha256 === "string" ?
-    "sha256:" + table.fullSourceSha256 : null;
-  if (typeof sourceUrl !== "string" || !/^https:\/\/(?:[a-z0-9.-]+\.)?census\.gov\//i.test(sourceUrl) ||
-      typeof sourceDigest !== "string" || !/^sha256:[a-f0-9]{64}$/i.test(sourceDigest))
-    throw new Error("Verified Census source URL and source-table SHA-256 provenance are required before fitting a modeled electorate.");
-  return {
-    publisher:"US Census Bureau",survey:"ACS",surveyYear:2024,period:"5-year",
-    geographyVintage:"2020",sourceUrl,sourceDigest,releaseStatus:"verified",
-    dimension:source.dimension,tableId:source.dimension==="age"?"B01001":"B15003",
-    ...(typeof raw.profileDigest === "string" ? {profileDigest:raw.profileDigest} : {})
-  };
+  // Reuse E3's exact typed, source-gated adapter. E1 never reconstructs or
+  // substitutes official source hashes, population marginal shares or URLs.
+  return source.compositionProvenance;
 }
+
 /** E2 exclusively performs all hypothetical population-to-ballot allocations.
  * This is a strict API bridge, not an alternative UI-generated split. */
 export function beginCompositionModel(

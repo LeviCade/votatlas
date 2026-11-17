@@ -22,9 +22,15 @@ export interface AcsCountyMarginal {
   universeMoe90: number | null;
   categories: readonly AcsCategory[];
 }
+export interface VerifiedAcsCompositionProvenance {
+  publisher:"US Census Bureau";survey:"ACS";surveyYear:2024;period:"5-year";
+  geographyVintage:"2020";sourceUrl:string;sourceDigest:string;
+  releaseStatus:"verified";dimension:AcsDimension;tableId:"B01001"|"B15003";
+}
 type AcsApi = {
   getTennesseeAcs2024CountyMarginals?: (dimension: AcsDimension) => readonly AcsCountyMarginal[];
   getTennesseeAcs2024Provenance?: () => unknown;
+  getTennesseeAcs2024CompositionSourceProvenance?: (dimension:AcsDimension) => VerifiedAcsCompositionProvenance;
 };
 const api = data as typeof data & AcsApi;
 export interface AvailableAcsSource {
@@ -32,6 +38,7 @@ export interface AvailableAcsSource {
   dimension: AcsDimension;
   rows: readonly AcsCountyMarginal[];
   provenance: unknown;
+  compositionProvenance: VerifiedAcsCompositionProvenance;
 }
 export interface UnavailableAcsSource {
   status: "unavailable";
@@ -87,7 +94,8 @@ function assertAcsRows(dimension:AcsDimension,rows:readonly AcsCountyMarginal[])
 }
 export function readTennesseeAcs(dimension:AcsDimension):AcsSourceState {
   if(typeof api.getTennesseeAcs2024CountyMarginals!=="function"||
-      typeof api.getTennesseeAcs2024Provenance!=="function")
+      typeof api.getTennesseeAcs2024Provenance!=="function"||
+      typeof api.getTennesseeAcs2024CompositionSourceProvenance!=="function")
     return {status:"unavailable",dimension,
       reason:"The source-verified 2024 ACS five-year Tennessee county profiles are not yet integrated. No ACS population shares have been invented."};
   try {
@@ -99,7 +107,14 @@ export function readTennesseeAcs(dimension:AcsDimension):AcsSourceState {
     if(meta.releaseStatus!=="verified-census-source"||
       typeof meta.payloadSha256!=="string"||!/^[a-f0-9]{64}$/i.test(meta.payloadSha256))
       throw Error("ACS source release approval and SHA-256 verification are incomplete.");
-    return {status:"available",dimension,rows,provenance};
+    const compositionProvenance=api.getTennesseeAcs2024CompositionSourceProvenance(dimension);
+    if(compositionProvenance.releaseStatus!=="verified"||
+      compositionProvenance.dimension!==dimension||
+      compositionProvenance.tableId!==metadata[dimension].table||
+      !/^https:\/\/www2\.census\.gov\//.test(compositionProvenance.sourceUrl)||
+      !/^sha256:[a-f0-9]{64}$/i.test(compositionProvenance.sourceDigest))
+      throw Error("E3's typed Census provenance adapter is not source-verified.");
+    return {status:"available",dimension,rows,provenance,compositionProvenance};
   } catch(cause){
     return {status:"unavailable",dimension,
       reason:cause instanceof Error?cause.message:"Source verified ACS data could not be loaded."};
