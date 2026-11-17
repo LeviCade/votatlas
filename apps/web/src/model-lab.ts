@@ -157,9 +157,11 @@ export function compositionProvenance(source: AvailableAcsSource): CompositionSo
   const raw = source.provenance as Record<string, unknown>;
   // The E3 native source getter is required to supply usable publisher metadata.
   // Do not substitute a link or an invented SHA when the source contract differs.
-  const sourceUrl = raw.sourceUrl;
-  const sourceDigest = raw.sourceDigest;
-  if (typeof sourceUrl !== "string" || !/^https:\/\/(api\.)?census\.gov\//.test(sourceUrl) ||
+  if(raw.releaseStatus!=="verified-census-source")
+    throw new Error("The Census source's verification gate is not open; no population-to-electorate fitting is permitted.");
+  const sourceUrl = raw.sourceDirectory ?? raw.sourceUrl;
+  const sourceDigest = typeof raw.payloadSha256 === "string" ? "sha256:" + raw.payloadSha256 : raw.sourceDigest;
+  if (typeof sourceUrl !== "string" || !/^https:\/\/(?:[a-z0-9.-]+\.)?census\.gov\//i.test(sourceUrl) ||
       typeof sourceDigest !== "string" || !/^sha256:[a-f0-9]{64}$/i.test(sourceDigest))
     throw new Error("Verified Census source URL and SHA-256 provenance are required before fitting a modeled electorate.");
   return {
