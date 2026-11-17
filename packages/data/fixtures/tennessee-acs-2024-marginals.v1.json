@@ -14247,7 +14247,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 9158,
-          "moe90": null,
+          "moe90": 663,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -14358,7 +14358,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 4166,
-          "moe90": null,
+          "moe90": 640,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -14469,7 +14469,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 880,
-          "moe90": null,
+          "moe90": 210,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -14580,7 +14580,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 850,
-          "moe90": null,
+          "moe90": 214,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -14691,7 +14691,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 18486,
-          "moe90": null,
+          "moe90": 1028,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -14802,7 +14802,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 10969,
-          "moe90": null,
+          "moe90": 892,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -14913,7 +14913,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1990,
-          "moe90": null,
+          "moe90": 384,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15024,7 +15024,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1163,
-          "moe90": null,
+          "moe90": 265,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15135,7 +15135,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2099,
-          "moe90": null,
+          "moe90": 282,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15246,7 +15246,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5638,
-          "moe90": null,
+          "moe90": 501,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15357,7 +15357,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5177,
-          "moe90": null,
+          "moe90": 555,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15468,7 +15468,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1623,
-          "moe90": null,
+          "moe90": 325,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15579,7 +15579,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2149,
-          "moe90": null,
+          "moe90": 360,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15690,7 +15690,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 303,
-          "moe90": null,
+          "moe90": 96,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15801,7 +15801,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1856,
-          "moe90": null,
+          "moe90": 360,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -15912,7 +15912,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 4936,
-          "moe90": null,
+          "moe90": 529,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16023,7 +16023,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1008,
-          "moe90": null,
+          "moe90": 214,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16134,7 +16134,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5748,
-          "moe90": null,
+          "moe90": 529,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16245,7 +16245,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 147760,
-          "moe90": null,
+          "moe90": 2985,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16356,7 +16356,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 981,
-          "moe90": null,
+          "moe90": 189,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16467,7 +16467,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1937,
-          "moe90": null,
+          "moe90": 334,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16578,7 +16578,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5720,
-          "moe90": null,
+          "moe90": 636,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16689,7 +16689,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 3397,
-          "moe90": null,
+          "moe90": 543,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16800,7 +16800,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 6345,
-          "moe90": null,
+          "moe90": 501,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -16911,7 +16911,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1208,
-          "moe90": null,
+          "moe90": 242,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17022,7 +17022,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 4456,
-          "moe90": null,
+          "moe90": 490,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17133,7 +17133,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 4445,
-          "moe90": null,
+          "moe90": 480,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17244,7 +17244,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2872,
-          "moe90": null,
+          "moe90": 404,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17355,7 +17355,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1629,
-          "moe90": null,
+          "moe90": 339,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17466,7 +17466,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 6042,
-          "moe90": null,
+          "moe90": 651,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17577,7 +17577,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 785,
-          "moe90": null,
+          "moe90": 174,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17688,7 +17688,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5340,
-          "moe90": null,
+          "moe90": 679,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17799,7 +17799,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 62202,
-          "moe90": null,
+          "moe90": 2327,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -17910,7 +17910,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 253,
-          "moe90": null,
+          "moe90": 79,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18021,7 +18021,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1566,
-          "moe90": null,
+          "moe90": 339,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18132,7 +18132,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1913,
-          "moe90": null,
+          "moe90": 353,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18243,7 +18243,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 4440,
-          "moe90": null,
+          "moe90": 527,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18354,7 +18354,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1259,
-          "moe90": null,
+          "moe90": 209,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18465,7 +18465,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2106,
-          "moe90": null,
+          "moe90": 401,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18576,7 +18576,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2980,
-          "moe90": null,
+          "moe90": 405,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18687,7 +18687,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1674,
-          "moe90": null,
+          "moe90": 299,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18798,7 +18798,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 579,
-          "moe90": null,
+          "moe90": 140,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -18909,7 +18909,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1513,
-          "moe90": null,
+          "moe90": 251,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19020,7 +19020,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 981,
-          "moe90": null,
+          "moe90": 221,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19131,7 +19131,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5399,
-          "moe90": null,
+          "moe90": 672,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19242,7 +19242,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1721,
-          "moe90": null,
+          "moe90": 361,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19353,7 +19353,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 82224,
-          "moe90": null,
+          "moe90": 2320,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19464,7 +19464,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 253,
-          "moe90": null,
+          "moe90": 84,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19575,7 +19575,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1382,
-          "moe90": null,
+          "moe90": 258,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19686,7 +19686,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2830,
-          "moe90": null,
+          "moe90": 405,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19797,7 +19797,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 710,
-          "moe90": null,
+          "moe90": 224,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -19908,7 +19908,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 3301,
-          "moe90": null,
+          "moe90": 369,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20019,7 +20019,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 7977,
-          "moe90": null,
+          "moe90": 643,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20130,7 +20130,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 4689,
-          "moe90": null,
+          "moe90": 552,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20241,7 +20241,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1597,
-          "moe90": null,
+          "moe90": 277,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20352,7 +20352,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1596,
-          "moe90": null,
+          "moe90": 334,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20463,7 +20463,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 10469,
-          "moe90": null,
+          "moe90": 873,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20574,7 +20574,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2361,
-          "moe90": null,
+          "moe90": 386,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20685,7 +20685,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 4109,
-          "moe90": null,
+          "moe90": 566,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20796,7 +20796,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 14580,
-          "moe90": null,
+          "moe90": 1129,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -20907,7 +20907,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 851,
-          "moe90": null,
+          "moe90": 185,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21018,7 +21018,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 3895,
-          "moe90": null,
+          "moe90": 566,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21129,7 +21129,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 28212,
-          "moe90": null,
+          "moe90": 1395,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21240,7 +21240,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 684,
-          "moe90": null,
+          "moe90": 208,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21351,7 +21351,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1332,
-          "moe90": null,
+          "moe90": 289,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21462,7 +21462,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2456,
-          "moe90": null,
+          "moe90": 310,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21573,7 +21573,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1713,
-          "moe90": null,
+          "moe90": 341,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21684,7 +21684,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 620,
-          "moe90": null,
+          "moe90": 166,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21795,7 +21795,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 467,
-          "moe90": null,
+          "moe90": 120,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -21906,7 +21906,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1259,
-          "moe90": null,
+          "moe90": 252,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22017,7 +22017,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 9697,
-          "moe90": null,
+          "moe90": 836,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22128,7 +22128,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 3030,
-          "moe90": null,
+          "moe90": 543,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22239,7 +22239,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5337,
-          "moe90": null,
+          "moe90": 479,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22350,7 +22350,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 7782,
-          "moe90": null,
+          "moe90": 753,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22461,7 +22461,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 55126,
-          "moe90": null,
+          "moe90": 1942,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22572,7 +22572,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1049,
-          "moe90": null,
+          "moe90": 203,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22683,7 +22683,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1535,
-          "moe90": null,
+          "moe90": 342,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22794,7 +22794,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 10314,
-          "moe90": null,
+          "moe90": 933,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -22905,7 +22905,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 122823,
-          "moe90": null,
+          "moe90": 3493,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23016,7 +23016,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1837,
-          "moe90": null,
+          "moe90": 294,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23127,7 +23127,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1191,
-          "moe90": null,
+          "moe90": 222,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23238,7 +23238,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 21112,
-          "moe90": null,
+          "moe90": 1088,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23349,7 +23349,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 30930,
-          "moe90": null,
+          "moe90": 1487,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23460,7 +23460,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 5661,
-          "moe90": null,
+          "moe90": 629,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23571,7 +23571,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 631,
-          "moe90": null,
+          "moe90": 211,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23682,7 +23682,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1766,
-          "moe90": null,
+          "moe90": 329,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23793,7 +23793,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1341,
-          "moe90": null,
+          "moe90": 314,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -23904,7 +23904,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 424,
-          "moe90": null,
+          "moe90": 124,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -24015,7 +24015,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2674,
-          "moe90": null,
+          "moe90": 433,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -24126,7 +24126,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 18688,
-          "moe90": null,
+          "moe90": 1272,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -24237,7 +24237,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1112,
-          "moe90": null,
+          "moe90": 225,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -24348,7 +24348,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 2945,
-          "moe90": null,
+          "moe90": 364,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -24459,7 +24459,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 1991,
-          "moe90": null,
+          "moe90": 328,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -24570,7 +24570,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 66661,
-          "moe90": null,
+          "moe90": 1922,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],
@@ -24681,7 +24681,7 @@
           "id": "bachelors",
           "label": "Bachelor’s degree",
           "estimate": 27613,
-          "moe90": null,
+          "moe90": 1474,
           "sourceEstimateVariables": [
             "B15003_022E"
           ],

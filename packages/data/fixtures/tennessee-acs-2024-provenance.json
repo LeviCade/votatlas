@@ -34,7 +34,7 @@
       "moeColumns": 25
     }
   },
-  "payloadSha256": "500e50d496e7d4b900a43ef5bc525a3f777ba0153e9203006af31cacc1516f51",
+  "payloadSha256": "0b8decedd5bd07fda6036f64305cecf5c6d63dfed5150b9cb47bc2423ac4d7de",
   "sourceAcquisition": "Full official Census HTTPS originals SHA-256 pinned; downstream review must verify retrieval chain",
   "estimatedMarginsOfError": "All original source E/M variable pairs retained in raw extracts; negative and Census 9-digit special MOE codes are null; derived category/adult MOE not computed without covariance",
   "denominatorAge": "B01001 18+ resident population recombined from 6 disjoint adult age bands",
