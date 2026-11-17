@@ -31,7 +31,7 @@ Confirm each county sum of all six groups equals total population minus under-18
 - Bachelor's E022
 - Graduate or professional degree E023–E025
 
-Statewide Tennessee sum: **4,870,330 persons aged 25+**. The 25+ denominator must never be substituted for 18+; the two marginals overlap and do not supply an age-by-education joint distribution.
+Statewide Tennessee sum: **4,870,330 persons aged 25+**. The 25+ denominator must never be substituted for 18+; the two marginals overlap and do not supply an age-by-education joint distribution. In the genuine source, each county's adult B01001 population minus 18–24 also equals the corresponding B15003 population 25+; this independent cross-table control is verified during source generation.
 
 ## Survey estimates, uncertainty and reuse
 

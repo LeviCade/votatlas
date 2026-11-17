@@ -107,5 +107,10 @@ export function verifyDataset(dataset,refs){
    ensure(sum(p.categories.map(c=>c.estimate))===p.universeEstimate,'partition not conserved');
   });
  }
+ for(let i=0;i<95;i++){
+  ensure(dataset.age[i].geoId===dataset.education[i].geoId,'cross-table county GEOID mismatch');
+  ensure(dataset.age[i].universeEstimate-dataset.age[i].categories[0].estimate===dataset.education[i].universeEstimate,
+   'B01001 population 25+ differs from B15003 population 25+ in '+dataset.age[i].geoId);
+ }
  return dataset;
 }

@@ -35,7 +35,7 @@ test('95 counties preserve correct age versus education denominators and MOE sen
  assert.equal(education[0].categories.find(c=>c.id==='bachelors').moe90,12);
  assert.equal(education[0].categories.find(c=>c.id==='high-school-equivalent').moe90,null);
  const d={datasetId:'tn-2024-acs5-county-population-marginals-v1',source:'US_CENSUS_2024_ACS_5YEAR',age,education};
- assert.equal(verifyDataset(d,refs),d);
+ assert.throws(()=>verifyDataset(d,refs),/population 25\+ differs/);
 });
 test('reject altered sex subtotals and education 25+ universe',()=>{
  const a=parseTableExtract(sample('B01001'),'B01001',refs);a[0].cells.B01001_002E.estimate++;
@@ -68,4 +68,14 @@ test('full official table bytes hashed and only 95 TN county rows selected',asyn
   assert.equal(result.originalLineCount,97);
   assert.equal(result.countyRows,95);
  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+test('cross-table ACS age-derived 25+ universe matches B15003 25+ in every county',()=>{
+ const age=convertMarginal(parseTableExtract(sample('B01001'),'B01001',refs),'age');
+ const education=convertMarginal(parseTableExtract(sample('B15003'),'B15003',refs),'education');
+ const d={datasetId:'tn-2024-acs5-county-population-marginals-v1',source:'US_CENSUS_2024_ACS_5YEAR',age,education};
+ assert.throws(()=>verifyDataset(d,refs),/population 25\+ differs/);
+ // Synthetic test differs intentionally: B01001 adult 25+ is zero, B15003 is 24.
+ // A fixture with matching universes must pass.
+ education.forEach(row=>{row.universeEstimate=0;row.categories[0].estimate=0;row.categories[1].estimate=0;row.categories[2].estimate=0;row.categories[3].estimate=0;row.categories[4].estimate=0;});
+ assert.equal(verifyDataset(d,refs),d);
 });
