@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {compositionPartitionId} from "@votatlas/sim-core";
 import type {Page,TestInfo} from "@playwright/test";
 async function screenshot(page:Page,info:TestInfo,name:string){
   const path=info.outputPath(name+".png");
@@ -210,6 +211,15 @@ test("R6 sourced ACS age population → E2 hypothetical cohort fit → 3-county 
       await page.getByLabel("Canonical model project JSON · v3").fill(JSON.stringify(parsed));
       await page.getByRole("button",{name:"Import JSON"}).click();
       await expect(page.locator(".scenario-error")).toContainText("SOURCE_MISMATCH");
+      expect(await number(page,"scope-votes-cedar")).toBe(beforeCedar+gained);
+      const staleProfile=JSON.parse(saved);
+      const assumptionDigest=staleProfile.cohort.model.seed.split(".")[1];
+      const staleSeed="sha256:"+"0".repeat(64)+"."+assumptionDigest;
+      staleProfile.cohort.model.seed=staleSeed;
+      staleProfile.cohort.partition.partitionId=compositionPartitionId(staleSeed);
+      await page.getByLabel("Canonical model project JSON · v3").fill(JSON.stringify(staleProfile));
+      await page.getByRole("button",{name:"Import JSON"}).click();
+      await expect(page.locator(".scenario-error")).toContainText("different ACS population profile");
       expect(await number(page,"scope-votes-cedar")).toBe(beforeCedar+gained);
     }
   }
