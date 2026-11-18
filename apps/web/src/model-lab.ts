@@ -2,6 +2,9 @@ import type { BaseUnitResult, ElectionDefinition } from "@votatlas/contracts";
 import * as sim from "@votatlas/sim-core";
 import type { CohortAction, CohortSimulationResult, SyntheticCohortPartition } from "@votatlas/sim-core";
 import type { RegistrySandboxSession } from "./sandbox";
+import type { AcsDimension, AcsCountyMarginal, AvailableAcsSource } from "./acs-source";
+import { readTennesseeAcs } from "./acs-source";
+import type { CohortModelProvenance } from "@votatlas/sim-core";
 import { hydrateRegistrySandbox } from "./sandbox";
 
 /** One opt-in, source-bound synthetic disjoint partition. No fabricated county demographics. */
@@ -10,6 +13,9 @@ export interface SyntheticModelSession {
   actions: CohortAction[];
   output: CohortSimulationResult;
   seed: string;
+  /** A Census composition is source data; its modeled ballot partition is always hypothetical. */
+  dimension?: "fictional" | AcsDimension;
+  provenance?: CohortModelProvenance;
 }
 /** Compare numeric county invariants, not JavaScript object key insertion order. */
 function sameCountyVotes(a: readonly BaseUnitResult[], b: readonly BaseUnitResult[]): boolean {
@@ -26,8 +32,39 @@ function sameCountyVotes(a: readonly BaseUnitResult[], b: readonly BaseUnitResul
   }
   return true;
 }
+export interface CompositionSourceProvenance {
+  publisher: "US Census Bureau";
+  survey: "ACS";
+  surveyYear: 2024;
+  period: "5-year";
+  geographyVintage: "2020";
+  sourceUrl: string;
+  sourceDigest: string;
+  releaseStatus: "verified";
+  dimension: AcsDimension;
+  tableId: "B01001" | "B15003";
+  profileDigest?: string;
+}
+export interface CompositionModelAssumptions {
+  kind: "explicit-hypothetical-weights";
+  universe: "population_18_plus" | "population_25_plus";
+  turnoutWeightByCategory: Record<string, number>;
+  candidatePreference: {kind:"county-neutral"};
+  eligibleAllocation: "ballots-plus-population-weighted-slack";
+}
+export interface CompositionFit {
+  partition: SyntheticCohortPartition;
+  modelProvenance: CohortModelProvenance;
+  audit: { dimension?: AcsDimension; sourceDigest?: string; profileDigest?: string };
+}
 interface CanonicalModelApi {
+  fitSyntheticElectorateFromComposition?: (
+    election: ElectionDefinition, postClassicUnits: readonly BaseUnitResult[],
+    marginal: readonly AcsCountyMarginal[], provenance: CompositionSourceProvenance,
+    assumptions: CompositionModelAssumptions
+  ) => CompositionFit;
   createSyntheticDemoPartition?: (election: ElectionDefinition, ordinaryResultUnits: readonly BaseUnitResult[], seed?: string) => SyntheticCohortPartition;
+  fingerprintPopulationMarginals?: (marginals: readonly AcsCountyMarginal[], provenance: CompositionSourceProvenance) => string;
   createScenarioProjectV3?: (sourceElection: ElectionDefinition, sourceUnits: readonly BaseUnitResult[],
     workingElection: ElectionDefinition, workingUnits: readonly BaseUnitResult[],
     scenario: RegistrySandboxSession["scenario"], partition: SyntheticCohortPartition,
@@ -36,11 +73,13 @@ interface CanonicalModelApi {
 const api = sim as typeof sim & CanonicalModelApi;
 export const modelGeneratorReady = typeof api.createSyntheticDemoPartition === "function";
 export const canonicalV3Ready = typeof api.createScenarioProjectV3 === "function";
+export const compositionFitReady = typeof api.fitSyntheticElectorateFromComposition === "function";
 function unsupported(): never {
   throw new Error("Canonical synthetic model support is not yet integrated. Cohort editing and project persistence are unavailable.");
 }
 function build(ordinary: RegistrySandboxSession, partition: SyntheticCohortPartition,
-  actions: readonly CohortAction[], seed: string): SyntheticModelSession {
+  actions: readonly CohortAction[], seed: string,
+  provenance?: CohortModelProvenance, dimension: "fictional" | AcsDimension = "fictional"): SyntheticModelSession {
   const output = sim.simulateCohortPartition(ordinary.election, ordinary.result.units, partition, actions);
   if (actions.length === 0) {
     // Every county candidate count AND other ballots must be exactly reconstructed.
@@ -48,7 +87,7 @@ function build(ordinary: RegistrySandboxSession, partition: SyntheticCohortParti
       throw new Error("Synthetic partition must exactly reconstruct the current standard election before applying model actions.");
     }
   }
-  return { partition, actions: [...actions], output, seed };
+  return { partition, actions: [...actions], output, seed, dimension, provenance };
 }
 export function beginSyntheticModel(ordinary: RegistrySandboxSession, seed = "votatlas-fictional-2026"): SyntheticModelSession {
   if (!api.createSyntheticDemoPartition) return unsupported();
@@ -57,14 +96,17 @@ export function beginSyntheticModel(ordinary: RegistrySandboxSession, seed = "vo
 }
 export function appendModelAction(ordinary: RegistrySandboxSession, current: SyntheticModelSession, action: CohortAction): SyntheticModelSession {
   if (current.actions.some(existing => existing.id === action.id)) throw new Error("Duplicate synthetic model action ID.");
-  return build(ordinary, current.partition, [...current.actions, action], current.seed);
+  return build(ordinary, current.partition, [...current.actions, action], current.seed,
+    current.provenance, current.dimension);
 }
 export function undoModelAction(ordinary: RegistrySandboxSession, current: SyntheticModelSession): SyntheticModelSession {
-  return build(ordinary, current.partition, current.actions.slice(0, -1), current.seed);
+  return build(ordinary, current.partition, current.actions.slice(0, -1), current.seed,
+    current.provenance, current.dimension);
 }
 /** Replaying the same partition without cohort actions preserves the ordinary scenario. */
 export function resetModelActions(ordinary: RegistrySandboxSession, current: SyntheticModelSession): SyntheticModelSession {
-  return build(ordinary, current.partition, [], current.seed);
+  return build(ordinary, current.partition, [], current.seed,
+    current.provenance, current.dimension);
 }
 export function exportProjectWithModel(
   ordinary: RegistrySandboxSession, model: SyntheticModelSession,
@@ -74,7 +116,7 @@ export function exportProjectWithModel(
   const project = api.createScenarioProjectV3(
     trustedElection, trustedUnits, ordinary.election, ordinary.baseUnits,
     ordinary.scenario, model.partition, model.actions,
-    sim.createSyntheticDemoModel(model.seed)
+    model.provenance ?? sim.createSyntheticDemoModel(model.seed)
   );
   return (sim.serializeScenarioProject as (value: unknown) => string)(project);
 }
@@ -86,10 +128,34 @@ interface RestoredWithModel {
   cohortActions: CohortAction[];
   cohortResult: CohortSimulationResult;
   intermediate?: { units: BaseUnitResult[] };
-  model?: { seed?: string };
+  model?: CohortModelProvenance;
 }
 function hasModel(value: object): value is RestoredWithModel {
   return "cohortResult" in value && "cohortPartition" in value && "cohortActions" in value;
+}
+
+/** Verify the current E3 population profile matches a restored composition model.
+ * A v3 partition ID binds the saved model internally; this additionally detects
+ * when the external Census profile behind that model has changed. */
+export function assertCompositionModelSourceCurrent(
+  model: CohortModelProvenance,
+  source: AvailableAcsSource,
+): void {
+  if (model.modelId !== "acs-population-composition-hypothesis") return;
+  if (model.modelVersion !== "1" ||
+      !/^sha256:[0-9a-f]{64}\.sha256:[0-9a-f]{64}$/.test(model.seed)) {
+    throw new Error("Saved ACS composition model has invalid source/assumption fingerprint metadata.");
+  }
+  if (!api.fingerprintPopulationMarginals) {
+    throw new Error("Cannot verify the saved ACS population profile: E2 fingerprint API is unavailable.");
+  }
+  const savedProfileDigest = model.seed.split(".")[0];
+  const currentProfileDigest = api.fingerprintPopulationMarginals(
+    source.rows, source.compositionProvenance
+  );
+  if (savedProfileDigest !== currentProfileDigest) {
+    throw new Error("Saved composition model references a different ACS population profile. The Census source or county estimates changed; rebuild the hypothetical model from the current verified source before importing.");
+  }
 }
 export function importCanonicalProject(
   json: string, trustedElection: ElectionDefinition, trustedUnits: readonly BaseUnitResult[],
@@ -100,9 +166,61 @@ export function importCanonicalProject(
   if (!canonicalV3Ready) return unsupported();
   if (restored.intermediate && !sameCountyVotes(restored.intermediate.units, ordinary.result.units))
     throw new Error("Canonical imported pre-model election does not match the trusted replay.");
+  const dim=restored.model?.modelId === "fictional-cohort-demo" ? "fictional"
+    : restored.cohortPartition.dimensionIds.some(id=>id.toLowerCase().includes("education")) ? "education"
+    : restored.cohortPartition.dimensionIds.some(id=>id.toLowerCase().includes("age")) ? "age"
+    : "fictional";
+  if (restored.model?.modelId === "acs-population-composition-hypothesis") {
+    if (dim === "fictional") {
+      throw new Error("Saved ACS composition model does not identify a supported age or education source dimension.");
+    }
+    const currentSource = readTennesseeAcs(dim);
+    if (currentSource.status !== "available") {
+      throw new Error("Cannot restore the source-labeled hypothetical model because its verified ACS population source is unavailable: " + currentSource.reason);
+    }
+    assertCompositionModelSourceCurrent(restored.model, currentSource);
+  }
   const model = build(ordinary, restored.cohortPartition, restored.cohortActions,
-    restored.model?.seed ?? restored.cohortPartition.partitionId);
+    restored.model?.seed ?? restored.cohortPartition.partitionId, restored.model, dim);
   if (!sameCountyVotes(model.output.result.units, restored.cohortResult.result.units))
     throw new Error("Canonical project cohort output failed deterministic validation.");
   return { ordinary, model };
+}
+
+/** Checked source provenance is required before E2's fitting model can run.
+ * E3 owns the underlying verified dataset; this adapter cannot invent a digest. */
+export function compositionProvenance(source: AvailableAcsSource): CompositionSourceProvenance {
+  // Reuse E3's exact typed, source-gated adapter. E1 never reconstructs or
+  // substitutes official source hashes, population marginal shares or URLs.
+  return source.compositionProvenance;
+}
+
+/** E2 exclusively performs all hypothetical population-to-ballot allocations.
+ * This is a strict API bridge, not an alternative UI-generated split. */
+export function beginCompositionModel(
+  ordinary: RegistrySandboxSession,
+  source: AvailableAcsSource,
+  turnoutWeightByCategory: Record<string,number>,
+): SyntheticModelSession {
+  if(!api.fitSyntheticElectorateFromComposition)
+    throw new Error("Canonical Census-composition electorate fitting is not yet integrated.");
+  const ids=source.rows[0]?.categories.map(group=>group.id)??[];
+  if(!ids.length||Object.keys(turnoutWeightByCategory).length!==ids.length||
+     ids.some(id=>!Object.hasOwn(turnoutWeightByCategory,id) ||
+      !Number.isFinite(turnoutWeightByCategory[id]) || turnoutWeightByCategory[id]! < 0 ||
+      turnoutWeightByCategory[id]! > 2))
+    throw new Error("Every explicitly hypothetical category weight must be specified between 0× and 2×.");
+  const assumptions:CompositionModelAssumptions={
+    kind:"explicit-hypothetical-weights",
+    universe:source.dimension==="age"?"population_18_plus":"population_25_plus",
+    turnoutWeightByCategory,
+    candidatePreference:{kind:"county-neutral"},
+    eligibleAllocation:"ballots-plus-population-weighted-slack"
+  };
+  const fit=api.fitSyntheticElectorateFromComposition(ordinary.election,ordinary.result.units,
+    source.rows,compositionProvenance(source),assumptions);
+  const model=build(ordinary,fit.partition,[],fit.modelProvenance.seed,fit.modelProvenance,source.dimension);
+  if(model.output.result.units.length!==95)
+    throw new Error("Census-derived modeled partition must include exactly 95 Tennessee counties.");
+  return model;
 }

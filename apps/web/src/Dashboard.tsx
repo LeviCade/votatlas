@@ -8,6 +8,7 @@ import type { CountyReference } from "@votatlas/data";
 import { SchematicAtlas } from "./SchematicAtlas";
 import { CandidateEditor } from "./CandidateEditor";
 import type { CandidateAddition, CohortAction } from "@votatlas/sim-core";
+import type { AcsDimension } from "./acs-source";
 import { ModelLab } from "./ModelLab";
 import type { SyntheticModelSession } from "./model-lab";
 import { normalizedCountyIds, resolveScope, selectedCountyIds, summarizeScope } from "./geo-scope";
@@ -26,6 +27,8 @@ export interface DashboardProps {
   model?: SyntheticModelSession | null;
   modelGeneratorReady?: boolean;
   canonicalV3Ready?: boolean;
+  compositionFitReady?: boolean;
+  onBeginAcs?: (dimension:AcsDimension, weights:Record<string,number>)=>boolean;
   onBeginModel?: (seed: string) => boolean;
   onModelAction?: (action: CohortAction) => boolean;
   onUndoModel?: () => void;
@@ -122,6 +125,7 @@ function ScopedResults({ title, current, initial, candidates }: {
 }
 export function Dashboard({ election, trustedSource, result, baseline, references, scenario, geometry,
   model = null, modelGeneratorReady = false, canonicalV3Ready = false,
+  compositionFitReady = false, onBeginAcs = () => false,
   onBeginModel = () => false, onModelAction = () => false,
   onUndoModel = () => {}, onResetModel = () => {}, onExitModel = () => {},
   onAdjustment, onAddCandidate, onRenameCandidate, onRemoveCandidate,
@@ -438,6 +442,7 @@ export function Dashboard({ election, trustedSource, result, baseline, reference
               <ModelLab candidates={candidates} selectedIds={selectedIds} scope={scope()}
                 scopeLabel={activeAreaLabel} model={model}
                 generatorReady={modelGeneratorReady} canonicalSaveReady={canonicalV3Ready}
+                compositionFitReady={compositionFitReady} onBeginAcs={onBeginAcs}
                 onStart={onBeginModel} onApply={onModelAction} onUndo={onUndoModel}
                 onResetEdits={onResetModel} onExit={onExitModel}/>
             </div>}
