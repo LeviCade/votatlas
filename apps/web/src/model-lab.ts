@@ -143,7 +143,7 @@ export function assertCompositionModelSourceCurrent(
 ): void {
   if (model.modelId !== "acs-population-composition-hypothesis") return;
   if (model.modelVersion !== "1" ||
-      !/^sha256:[0-9a-f]{64}\\.sha256:[0-9a-f]{64}$/.test(model.seed)) {
+      !/^sha256:[0-9a-f]{64}\.sha256:[0-9a-f]{64}$/.test(model.seed)) {
     throw new Error("Saved ACS composition model has invalid source/assumption fingerprint metadata.");
   }
   if (!api.fingerprintPopulationMarginals) {
