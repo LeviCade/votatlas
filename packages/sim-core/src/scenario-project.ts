@@ -7,6 +7,7 @@ import { sha256Hex } from "./sha256.js";
 import { simulateCohortPartition } from "./cohorts.js";
 import type { CohortAction, CohortSimulationResult, SyntheticCohortPartition } from "./cohorts.js";
 import { createSyntheticDemoModel, fictionalDemoPartitionId, FICTIONAL_COHORT_MODEL_VERSION } from "./demo-cohorts.js";
+import { COMPOSITION_MODEL_ID, COMPOSITION_MODEL_VERSION, compositionPartitionId } from "./composition.js";
 
 /** Portable v2 contains NO replacement baseline votes. A verified source must be supplied to restore. */
 export interface ScenarioProjectV2 {
@@ -533,6 +534,11 @@ function hydrateV3(
        project.cohort.partition.partitionId !== fictionalDemoPartitionId(project.cohort.model.seed))) {
     invalid("Fictional demo seed/version and saved partition do not match");
   }
+  if (project.cohort.model.modelId === COMPOSITION_MODEL_ID &&
+      (project.cohort.model.modelVersion !== COMPOSITION_MODEL_VERSION ||
+       project.cohort.partition.partitionId !== compositionPartitionId(project.cohort.model.seed))) {
+    invalid("Source-labeled hypothetical composition hash/version does not match partition");
+  }
   const cohortResult = simulateCohortPartition(hydrated.election, hydrated.result.units,
     project.cohort.partition, project.cohort.actions);
   return {
@@ -564,6 +570,11 @@ export function createScenarioProjectV3(
   if (provenance.modelId === "fictional-cohort-demo" &&
       cohortPartition.partitionId !== fictionalDemoPartitionId(provenance.seed)) {
     invalid("Fictional model seed/version does not match the cohort partition identifier");
+  }
+  if (provenance.modelId === COMPOSITION_MODEL_ID &&
+      (provenance.modelVersion !== COMPOSITION_MODEL_VERSION ||
+       cohortPartition.partitionId !== compositionPartitionId(provenance.seed))) {
+    invalid("Source-labeled hypothetical composition provenance does not match partition");
   }
   const v2 = createScenarioProject(sourceElection, sourceBaseUnits, election, baseUnits, scenario);
   const intermediate = hydrateV2(v2, sourceElection, sourceBaseUnits);
