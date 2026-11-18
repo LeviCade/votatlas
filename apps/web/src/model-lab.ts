@@ -3,6 +3,7 @@ import * as sim from "@votatlas/sim-core";
 import type { CohortAction, CohortSimulationResult, SyntheticCohortPartition } from "@votatlas/sim-core";
 import type { RegistrySandboxSession } from "./sandbox";
 import type { AcsDimension, AcsCountyMarginal, AvailableAcsSource } from "./acs-source";
+import { readTennesseeAcs } from "./acs-source";
 import type { CohortModelProvenance } from "@votatlas/sim-core";
 import { hydrateRegistrySandbox } from "./sandbox";
 
@@ -63,6 +64,7 @@ interface CanonicalModelApi {
     assumptions: CompositionModelAssumptions
   ) => CompositionFit;
   createSyntheticDemoPartition?: (election: ElectionDefinition, ordinaryResultUnits: readonly BaseUnitResult[], seed?: string) => SyntheticCohortPartition;
+  fingerprintPopulationMarginals?: (marginals: readonly AcsCountyMarginal[], provenance: CompositionSourceProvenance) => string;
   createScenarioProjectV3?: (sourceElection: ElectionDefinition, sourceUnits: readonly BaseUnitResult[],
     workingElection: ElectionDefinition, workingUnits: readonly BaseUnitResult[],
     scenario: RegistrySandboxSession["scenario"], partition: SyntheticCohortPartition,
@@ -126,10 +128,34 @@ interface RestoredWithModel {
   cohortActions: CohortAction[];
   cohortResult: CohortSimulationResult;
   intermediate?: { units: BaseUnitResult[] };
-  model?: { seed?: string };
+  model?: CohortModelProvenance;
 }
 function hasModel(value: object): value is RestoredWithModel {
   return "cohortResult" in value && "cohortPartition" in value && "cohortActions" in value;
+}
+
+/** Verify the current E3 population profile matches a restored composition model.
+ * A v3 partition ID binds the saved model internally; this additionally detects
+ * when the external Census profile behind that model has changed. */
+export function assertCompositionModelSourceCurrent(
+  model: CohortModelProvenance,
+  source: AvailableAcsSource,
+): void {
+  if (model.modelId !== "acs-population-composition-hypothesis") return;
+  if (model.modelVersion !== "1" ||
+      !/^sha256:[0-9a-f]{64}\\.sha256:[0-9a-f]{64}$/.test(model.seed)) {
+    throw new Error("Saved ACS composition model has invalid source/assumption fingerprint metadata.");
+  }
+  if (!api.fingerprintPopulationMarginals) {
+    throw new Error("Cannot verify the saved ACS population profile: E2 fingerprint API is unavailable.");
+  }
+  const savedProfileDigest = model.seed.split(".")[0];
+  const currentProfileDigest = api.fingerprintPopulationMarginals(
+    source.rows, source.compositionProvenance
+  );
+  if (savedProfileDigest !== currentProfileDigest) {
+    throw new Error("Saved composition model references a different ACS population profile. The Census source or county estimates changed; rebuild the hypothetical model from the current verified source before importing.");
+  }
 }
 export function importCanonicalProject(
   json: string, trustedElection: ElectionDefinition, trustedUnits: readonly BaseUnitResult[],
@@ -144,6 +170,16 @@ export function importCanonicalProject(
     : restored.cohortPartition.dimensionIds.some(id=>id.toLowerCase().includes("education")) ? "education"
     : restored.cohortPartition.dimensionIds.some(id=>id.toLowerCase().includes("age")) ? "age"
     : "fictional";
+  if (restored.model?.modelId === "acs-population-composition-hypothesis") {
+    if (dim === "fictional") {
+      throw new Error("Saved ACS composition model does not identify a supported age or education source dimension.");
+    }
+    const currentSource = readTennesseeAcs(dim);
+    if (currentSource.status !== "available") {
+      throw new Error("Cannot restore the source-labeled hypothetical model because its verified ACS population source is unavailable: " + currentSource.reason);
+    }
+    assertCompositionModelSourceCurrent(restored.model, currentSource);
+  }
   const model = build(ordinary, restored.cohortPartition, restored.cohortActions,
     restored.model?.seed ?? restored.cohortPartition.partitionId, restored.model, dim);
   if (!sameCountyVotes(model.output.result.units, restored.cohortResult.result.units))
