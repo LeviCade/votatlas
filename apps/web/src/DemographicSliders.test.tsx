@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { getTennesseeSyntheticFixture } from "@votatlas/data";
 import type { Candidate, GeoScope } from "@votatlas/contracts";
 import { addRegistryCandidate, initializeRegistrySandbox } from "./sandbox";
-import { appendModelAction, beginSyntheticModel, exportProjectWithModel, importCanonicalProject, undoModelAction } from "./model-lab";
+import { appendModelAction, beginSyntheticModel, beginCompositionModel, assertCompositionModelSourceCurrent, exportProjectWithModel, importCanonicalProject, undoModelAction } from "./model-lab";
 import { selectedModeledSupport, supportTargetAction, DemographicSliders } from "./DemographicSliders";
 import { readTennesseeAcs, acsUniverseLabel, sumSelectedAcsPopulation } from "./acs-source";
 
@@ -91,6 +91,31 @@ describe("R6 candidate-neutral modeled preference slider contracts",()=>{
       cohortIds:[model.partition.cohorts[0]!.id],scope,onApply:()=>true
     }));
     expect(markup).toContain("Independent Choice");
+  });
+});
+describe("R6 source-bound hypothetical composition projects",()=>{
+  it("fits both official ACS universes, replays v3, and rejects a stale Census profile fingerprint",()=>{
+    for(const dimension of ["age","education"] as const){
+      const source=readTennesseeAcs(dimension);
+      expect(source.status).toBe("available");
+      if(source.status!=="available")throw new Error("Expected verified ACS source to be available after E3 integration.");
+      const weights=Object.fromEntries(source.rows[0]!.categories.map(group=>[group.id,1]));
+      const ordinary=initial();
+      const model=beginCompositionModel(ordinary,source,weights);
+      expect(model.dimension).toBe(dimension);
+      expect(model.output.result.units).toHaveLength(95);
+      expect(model.provenance?.modelId).toBe("acs-population-composition-hypothesis");
+      assertCompositionModelSourceCurrent(model.provenance!,source);
+      const staleSource={...source,compositionProvenance:{
+        ...source.compositionProvenance,sourceDigest:"sha256:"+"0".repeat(64)
+      }};
+      expect(()=>assertCompositionModelSourceCurrent(model.provenance!,staleSource))
+        .toThrow(/different ACS population profile/);
+      const json=exportProjectWithModel(ordinary,model,fixture.election,fixture.units);
+      const restored=importCanonicalProject(json,fixture.election,fixture.units);
+      expect(restored.model?.dimension).toBe(dimension);
+      expect(restored.model?.output.result).toEqual(model.output.result);
+    }
   });
 });
 describe("R6 verified-source safety versus fictional simulated ballots",()=>{
