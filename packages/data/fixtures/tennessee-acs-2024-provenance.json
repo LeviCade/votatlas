@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "tn-2024-acs5-county-population-marginals-v1",
+  "releaseStatus": "verified-census-source",
+  "publisher": "United States Census Bureau",
+  "referenceYear": 2024,
+  "vintage": "2020-2024",
+  "dataset": "2024 ACS 5-year Detailed Tables — Table-Based Summary File",
+  "dataType": "resident population estimates, NOT registered voters, ballots or voter preferences",
+  "geography": "Census 2020 five-digit Tennessee county GEOID crosswalk, 95 counties",
+  "tables": {
+    "B01001": {
+      "tableId": "B01001",
+      "sourceUrl": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b01001.dat",
+      "sourceFormat": "Census pipe-delimited 2024 ACS 5-year table-based Summary File",
+      "fullSourceSha256": "1637b18a96881b81e050df1cd3d5ac38a33208b9b69b40e1dbeb3c4e13718f0e",
+      "fullSourceLines": 616691,
+      "extractSha256": "4e16fbf1e45ccd5378c7f38d401214cc642f8909d72ca3b12d2cfc28a1266833",
+      "extractBytes": 40675,
+      "countyRows": 95,
+      "estimateColumns": 49,
+      "moeColumns": 49
+    },
+    "B15003": {
+      "tableId": "B15003",
+      "sourceUrl": "https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData/acsdt5y2024-b15003.dat",
+      "sourceFormat": "Census pipe-delimited 2024 ACS 5-year table-based Summary File",
+      "fullSourceSha256": "d0c8609e958022459215c8a31d7452ef7528ee8dd70fbb6f9a99de0f491f42d7",
+      "fullSourceLines": 543580,
+      "extractSha256": "ff78839dba21dab748f45404c294f4b1477e0638b1e6c4e2224ac726141ded7e",
+      "extractBytes": 19818,
+      "countyRows": 95,
+      "estimateColumns": 25,
+      "moeColumns": 25
+    }
+  },
+  "payloadSha256": "0b8decedd5bd07fda6036f64305cecf5c6d63dfed5150b9cb47bc2423ac4d7de",
+  "sourceAcquisition": "Full official Census HTTPS originals SHA-256 pinned; downstream review must verify retrieval chain",
+  "estimatedMarginsOfError": "All original source E/M variable pairs retained in raw extracts; negative and Census 9-digit special MOE codes are null; derived category/adult MOE not computed without covariance",
+  "denominatorAge": "B01001 18+ resident population recombined from 6 disjoint adult age bands",
+  "denominatorEducation": "B15003_001 population ages 25+",
+  "overlapPolicy": "Age and education are different overlapping marginals, NEVER a combined partition",
+  "rights": "U.S. federal government Census factual data, 17 USC 105; attribution required; no endorsement implied"
+}

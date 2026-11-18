@@ -1,0 +1,74 @@
+name: Acquire original Census 2024 ACS 5-year Tennessee county source
+on:
+  push:
+    branches: [feature/v0.1-r6-e3-acs-county-profiles]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: acquire-acs-2024-tn
+  cancel-in-progress: false
+jobs:
+  official-census-source:
+    if: "!contains(github.event.head_commit.message, '[acs-source-verified]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download both complete, unmodified Census.gov ACS 2024 5-year tables
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/votatlas-census
+          BASE='https://www2.census.gov/programs-surveys/acs/summary_file/2024/table-based-SF/data/5YRData'
+          for table in b01001 b15003; do
+            url="$BASE/acsdt5y2024-$table.dat"
+            echo "CENSUS SOURCE ACQUISITION: $url"
+            curl --fail --location --retry 3 --retry-delay 4 --connect-timeout 30 --max-time 720 \
+              --silent --show-error --output "/tmp/votatlas-census/$table.dat" "$url"
+            test "$(wc -c < "/tmp/votatlas-census/$table.dat")" -gt 1000000 || { echo 'SOURCE NO-GO: original Census table not received'; exit 1; }
+            sha256sum "/tmp/votatlas-census/$table.dat"
+          done
+      - name: Reconcile original 95-county source, hashes, age/education universes
+        run: |
+          node scripts/generate-tennessee-acs-2024.mjs --write \
+            --age-full /tmp/votatlas-census/b01001.dat \
+            --education-full /tmp/votatlas-census/b15003.dat
+          node --test scripts/acs-2024-validation.test.mjs
+          node scripts/generate-tennessee-acs-2024.mjs --check
+          node scripts/generate-tennessee-2024.mjs --check
+      - name: Save reproducible, verified Census-only county rows and dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-census-2024-tn-95-county-profiles
+          if-no-files-found: error
+          path: |
+            packages/data/fixtures/acs-2024-b01001-tn-original-rows.dat
+            packages/data/fixtures/acs-2024-b15003-tn-original-rows.dat
+            packages/data/fixtures/tennessee-acs-2024-marginals.v1.json
+            packages/data/fixtures/tennessee-acs-2024-provenance.json
+      - name: Commit only source derived county files on unmerged Engineer 3 branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'votatlas-census-source-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/data/fixtures/acs-2024-b01001-tn-original-rows.dat \
+            packages/data/fixtures/acs-2024-b15003-tn-original-rows.dat \
+            packages/data/fixtures/tennessee-acs-2024-marginals.v1.json \
+            packages/data/fixtures/tennessee-acs-2024-provenance.json
+          if git diff --cached --quiet; then
+            echo 'Census data already verified and committed'
+          else
+            git commit -m 'data: [acs-source-verified] pin original 2024 Census age and education estimates'
+            git push origin HEAD:feature/v0.1-r6-e3-acs-county-profiles
+          fi
+      - name: Record verified acquisition
+        run: |
+          echo '## Official Census source ingested and checked' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Both full first-party ACS 2024 original files hashed, all 95 TN county rows verified; derived source data committed only to unmerged Engineer 3 branch.' >> "$GITHUB_STEP_SUMMARY"

@@ -12,3 +12,10 @@ export { getTennesseeRealCountyGeoJSON, getTennesseeGeometryProvenance } from '.
 /** Source-gated genuine Tennessee presidential records; no synthetic fallback. */
 export type { Tennessee2024SourceProvenance } from './tn-2024.js';
 export { HistoricalElectionUnavailableError, getTennessee2024PresidentialFixture, getTennessee2024PresidentialProvenance } from './tn-2024.js';
+
+/** Genuine 2024 ACS county POPULATION composition, never observed voting behavior. */
+export type {TennesseeAcsDimension,TennesseeAcsCategory,TennesseeAcsCountyMarginal,TennesseeAcsProvenance} from './acs-2024.js';
+export {CensusPopulationDataUnavailableError,getTennesseeAcs2024CountyMarginals,getTennesseeAcs2024Provenance} from './acs-2024.js';
+
+export type {TennesseeAcsCompositionSourceProvenance} from './acs-2024.js';
+export {getTennesseeAcs2024CompositionSourceProvenance} from './acs-2024.js';

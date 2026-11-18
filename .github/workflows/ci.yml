@@ -43,6 +43,10 @@ jobs:
           node --test scripts/tn-2024-release-gate.test.mjs
           python3 scripts/tn_2024_xlsx_inventory_test.py
           node scripts/generate-tennessee-2024.mjs --check
+      - name: Verify 2024 ACS county source, age / education universes and MOEs
+        run: |
+          node --test scripts/acs-2024-validation.test.mjs
+          node scripts/generate-tennessee-acs-2024.mjs --check
       - name: Rebuild authentic geometry byte-for-byte from pinned Census-derived source (network)
         run: node scripts/generate-tennessee-geometry.mjs --check-source
 
